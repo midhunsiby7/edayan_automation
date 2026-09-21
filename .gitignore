@@ -1,0 +1,59 @@
+# Environment and secrets (CRITICAL: NEVER COMMIT SECRETS)
+.env
+.env.local
+.env.*.local
+*.env
+
+# Allow only .env.example
+!.env.example
+!cashbook_ai/.env.example
+
+# Virtual Environments
+.venv/
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Testing and coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+
+# IDE and Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Real Accounting Data, Photographs, Logs, and Local Outputs (CONFIDENTIAL)
+data/input/
+cashbook_ai/data/input/
+data/output/
+cashbook_ai/data/output/
+*.xlsx
+*.xls
+*.csv
+raw_extractions.json
+*.log
+preprocessed/
+
+# Keep sample directory structure intact with .gitkeep
+!cashbook_ai/data/
+!cashbook_ai/data/samples/
+!cashbook_ai/data/samples/.gitkeep

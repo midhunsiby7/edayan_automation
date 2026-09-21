@@ -1,0 +1,45 @@
+# Environment and secrets (CRITICAL: NEVER COMMIT SECRETS)
+.env
+.env.local
+.env.*.local
+*.env
+
+# Allow only .env.example
+!.env.example
+
+# Virtual Environments
+.venv/
+venv/
+env/
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Testing and coverage
+.pytest_cache/
+
+# IDE and Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Real Accounting Data, Photographs, Logs, and Local Outputs (CONFIDENTIAL)
+data/input/
+data/output/
+*.xlsx
+*.xls
+*.csv
+raw_extractions.json
+*.log
+preprocessed/
+
+# Keep sample directory structure intact with .gitkeep
+!data/
+!data/samples/
+!data/samples/.gitkeep
