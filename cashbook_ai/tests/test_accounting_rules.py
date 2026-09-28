@@ -50,7 +50,7 @@ def test_head_78_voucher_1_payment_700():
         detected_amount_column=2,  # Column 2 = Payment
     )
     processed = engine.process_row(raw)
-    assert processed.head_number == "78"
+    assert processed.accounting_head_number == "78"
     assert processed.voucher_number == "1"
     assert processed.payment_amount == 700.00
     assert processed.receipt_amount is None
@@ -91,7 +91,7 @@ def test_head_78_voucher_2_payment_1080_with_ditto():
     )
     processed2 = engine.process_row(raw2)
     assert processed2.resolved_date == "2024-04-02"
-    assert processed2.head_number == "78"
+    assert processed2.accounting_head_number == "78"
     assert processed2.voucher_number == "2"
     assert processed2.payment_amount == 1080.00
     assert processed2.transaction_type == TransactionType.PAYMENT
@@ -136,3 +136,30 @@ def test_review_required_trigger_on_low_confidence():
     processed = engine.process_row(raw)
     assert processed.review_required is True
     assert any("Low amount confidence" in r for r in processed.review_reasons)
+
+
+def test_head_not_found_warning():
+    """Verify that an unknown head number triggers HEAD_NOT_FOUND review."""
+    from src.validation.head_master import HeadMasterRepository
+    from pathlib import Path
+    
+    # Empty repo
+    repo = HeadMasterRepository(Path("dummy.json"))
+    engine = AccountingRuleEngine(DateNormalizer(), head_master_repo=repo)
+    
+    raw = RawExtractedRow(
+        source_image="page1.jpg",
+        source_page="1",
+        source_row=10,
+        raw_date="06/04/2024",
+        raw_head_number="999",
+        raw_voucher_number="10",
+        raw_amount="500.00",
+        detected_amount_column=2,
+    )
+    processed = engine.process_row(raw)
+    assert processed.accounting_head_name is None
+    assert processed.website_head_value is None
+    assert processed.review_required is True
+    assert "HEAD_NOT_FOUND" in processed.review_reasons
+    assert "HEAD_MAPPING_NOT_FOUND" in processed.review_reasons

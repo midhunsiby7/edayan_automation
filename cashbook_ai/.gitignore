@@ -32,6 +32,7 @@ Thumbs.db
 # Real Accounting Data, Photographs, Logs, and Local Outputs (CONFIDENTIAL)
 data/input/
 data/output/
+data/reference/
 *.xlsx
 *.xls
 *.csv

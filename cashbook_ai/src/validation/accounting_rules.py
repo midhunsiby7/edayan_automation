@@ -7,7 +7,9 @@ from src.models import (
     RawExtractedRow,
     RecordType,
     TransactionType,
+    AccountSet
 )
+from src.validation.head_master import HeadMasterRepository
 from src.normalization.amount_normalizer import AmountNormalizer
 from src.normalization.date_normalizer import DateNormalizer
 from src.normalization.text_normalizer import TextNormalizer
@@ -40,8 +42,10 @@ CLOSING_BALANCE_KEYWORDS = {
 class AccountingRuleEngine:
     """Applies strict accounting rules, physical column-based receipt/payment mapping, and human audit flags."""
 
-    def __init__(self, date_normalizer: Optional[DateNormalizer] = None):
+    def __init__(self, date_normalizer: Optional[DateNormalizer] = None, head_master_repo: Optional[HeadMasterRepository] = None, account_set: AccountSet = AccountSet.GENERAL):
         self.date_normalizer = date_normalizer or DateNormalizer()
+        self.head_master_repo = head_master_repo
+        self.account_set = account_set
 
     def process_row(self, raw_row: RawExtractedRow) -> ProcessedRow:
         reasons: List[str] = []
@@ -66,6 +70,13 @@ class AccountingRuleEngine:
 
         # 4. Identify Record Type (Opening Balance / Closing Balance / Transaction)
         record_type = self._determine_record_type(clean_raw_narration, clean_eng_narration, voucher_num)
+
+        # 4b. Resolve Accounting Head Name using Head Master
+        accounting_head_name = None
+        if head_num and self.head_master_repo:
+            accounting_head_name = self.head_master_repo.get_head_name(self.account_set, head_num)
+            if not accounting_head_name and record_type == RecordType.TRANSACTION:
+                reasons.append("HEAD_NOT_FOUND")
 
         # 5. Amount & Physical Column Classification (Receipt vs Payment)
         receipt_amount: Optional[float] = None
@@ -131,6 +142,16 @@ class AccountingRuleEngine:
             if record_type == RecordType.TRANSACTION:
                 reasons.append("Missing transaction amount")
 
+        # 5b. Resolve Website Head Mapping
+        website_head_value = None
+        website_head_label = None
+        
+        # Currently no mapping repository is integrated, so valid mapped values remain None.
+        # As per rules: if no valid mapping exists for a transaction, flag HEAD_MAPPING_NOT_FOUND.
+        if record_type == RecordType.TRANSACTION and head_num:
+            if not website_head_value:
+                reasons.append("HEAD_MAPPING_NOT_FOUND")
+
         # 6. Evaluate Confidence Scores and Review Triggers
         review_required = False
 
@@ -161,7 +182,10 @@ class AccountingRuleEngine:
             row_bbox=raw_row.row_bbox,
             raw_date=raw_row.raw_date,
             resolved_date=resolved_date,
-            head_number=head_num,
+            accounting_head_number=head_num,
+            accounting_head_name=accounting_head_name,
+            website_head_value=website_head_value,
+            website_head_label=website_head_label,
             voucher_number=voucher_num,
             raw_narration=clean_raw_narration,
             english_narration=clean_eng_narration,

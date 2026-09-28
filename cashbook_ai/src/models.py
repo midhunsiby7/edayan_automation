@@ -18,6 +18,53 @@ class RecordType(str, Enum):
     UNKNOWN = "UNKNOWN"
 
 
+class AccountSet(str, Enum):
+    GENERAL = "GENERAL"
+    AGRICULTURE = "AGRICULTURE"
+
+
+class MasterSourceType(str, Enum):
+    REAL_AI_EXTRACTED = "REAL_AI_EXTRACTED"
+    MANUAL_VERIFIED = "MANUAL_VERIFIED"
+    MOCK_TEST = "MOCK_TEST"
+
+
+class AccountingHead(BaseModel):
+    account_set: AccountSet
+    accounting_head_number: str
+    accounting_head_name: str
+    normalized_accounting_head_name: Optional[str] = None
+    source_image: Optional[str] = None
+    source_page: Optional[str] = None
+    source_row: Optional[int] = None
+    extraction_confidence: float = 1.0
+    review_required: bool = False
+    source_type: MasterSourceType = MasterSourceType.REAL_AI_EXTRACTED
+
+
+class WebsiteHead(BaseModel):
+    website_head_value: str
+    website_head_label: str
+    direction: TransactionType
+    normalized_website_head_label: Optional[str] = None
+    source_type: Optional[str] = None
+    source_reference: Optional[str] = None
+    review_required: bool = False
+
+
+class HeadMapping(BaseModel):
+    account_set: AccountSet
+    accounting_head_number: str
+    accounting_head_name: str
+    direction: TransactionType
+    website_head_value: Optional[str] = None
+    website_head_label: Optional[str] = None
+    mapping_status: str
+    confidence: float = 1.0
+    source: Optional[str] = None
+    review_required: bool = False
+
+
 class RawExtractedRow(BaseModel):
     """Raw extraction output directly from the OCR/vision provider before normalization."""
     source_image: str
@@ -71,7 +118,10 @@ class ProcessedRow(BaseModel):
     resolved_date: Optional[str] = None
 
     # Identifiers
-    head_number: Optional[str] = None
+    accounting_head_number: Optional[str] = None
+    accounting_head_name: Optional[str] = None
+    website_head_value: Optional[str] = None
+    website_head_label: Optional[str] = None
     voucher_number: Optional[str] = None
 
     # Narrations

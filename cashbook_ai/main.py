@@ -125,7 +125,7 @@ class CashbookPipeline:
         total_rows = len(rows)
 
         unresolved_dates = sum(1 for r in rows if not r.resolved_date)
-        unresolved_heads = sum(1 for r in rows if not r.head_number and r.record_type == RecordType.TRANSACTION)
+        unresolved_heads = sum(1 for r in rows if not r.accounting_head_number and r.record_type == RecordType.TRANSACTION)
         unresolved_vouchers = sum(1 for r in rows if not r.voucher_number and r.record_type == RecordType.TRANSACTION)
         unresolved_amounts = sum(
             1 for r in rows if (r.receipt_amount is None and r.payment_amount is None and r.record_type == RecordType.TRANSACTION)

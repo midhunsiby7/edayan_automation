@@ -26,7 +26,10 @@ class ExcelExporter:
         ("Row", "source_row", 8),
         ("Raw Date", "raw_date", 12),
         ("Resolved Date", "resolved_date", 14),
-        ("Head No", "head_number", 10),
+        ("Acct Head No", "accounting_head_number", 14),
+        ("Acct Head Name", "accounting_head_name", 25),
+        ("Web Head Value", "website_head_value", 16),
+        ("Web Head Label", "website_head_label", 30),
         ("Voucher No", "voucher_number", 12),
         ("Raw Narration (Malayalam)", "raw_narration", 35),
         ("English Narration", "english_narration", 30),
@@ -46,7 +49,10 @@ class ExcelExporter:
         ("Raw Date", "raw_date", 12),
         ("Resolved Date", "resolved_date", 14),
         ("Date Conf", "date_confidence", 10),
-        ("Head No", "head_number", 10),
+        ("Acct Head No", "accounting_head_number", 14),
+        ("Acct Head Name", "accounting_head_name", 25),
+        ("Web Head Value", "website_head_value", 16),
+        ("Web Head Label", "website_head_label", 30),
         ("Head Conf", "head_confidence", 10),
         ("Voucher No", "voucher_number", 12),
         ("Voucher Conf", "voucher_confidence", 12),
@@ -75,9 +81,7 @@ class ExcelExporter:
         # Filter subsets
         receipt_rows = [
             r for r in rows
-            if r.transaction_type == TransactionType.RECEIPT or (
-                r.record_type == RecordType.OPENING_BALANCE and r.receipt_amount is not None
-            )
+            if r.transaction_type == TransactionType.RECEIPT
         ]
         payment_rows = [
             r for r in rows
@@ -172,7 +176,7 @@ class ExcelExporter:
                 if field_key in ("receipt_amount", "payment_amount"):
                     cell.alignment = align_right
                     cell.number_format = "#,##0.00"
-                elif field_key in ("source_page", "source_row", "resolved_date", "raw_date", "head_number", "voucher_number", "review_required"):
+                elif field_key in ("source_page", "source_row", "resolved_date", "raw_date", "accounting_head_number", "website_head_value", "voucher_number", "review_required"):
                     cell.alignment = align_center
                 elif field_key in ("extraction_confidence",):
                     cell.alignment = align_center
@@ -240,7 +244,7 @@ class ExcelExporter:
                 elif "confidence" in field_key or "conf" in field_key:
                     cell.alignment = align_center
                     cell.number_format = "0.00"
-                elif field_key in ("source_page", "source_row", "resolved_date", "raw_date", "head_number", "voucher_number", "review_required", "detected_amount_column"):
+                elif field_key in ("source_page", "source_row", "resolved_date", "raw_date", "accounting_head_number", "website_head_value", "voucher_number", "review_required", "detected_amount_column"):
                     cell.alignment = align_center
                 else:
                     cell.alignment = align_left
