@@ -193,6 +193,19 @@ The immediate next phase focuses strictly on **improving the data quality and ru
   - Excluded Count: 35 transactions (1 already CONFIRMED, 1 voucher discontinuity, 1 NEEDS_REVIEW, 32 Payments).
 - **Testing**: Added `tests/test_batch_entry.py` (12 tests) covering manifest generation, hash verification, approval lifecycle, scope expansion prevention, readback mismatch, live duplicate conflict, timeout to UNCERTAIN, and successful sequential mock execution. Full pytest suite: 67 passed with zero live submissions.
 
+## 7I. Second Live Transaction Confirmed & Circuit Breaker In Action (Oct 28, 2026)
+- **Voucher 515 Confirmed Live**:
+  - Row 4 (Receipts): Date `04-04-2026`, Receipt No `515`, Amount `₹6,405.00`, Head `143` (*Collections as per Order from the Diocese*), Subhead `454` (*Holy Land*), Narration *As per order (Holy land)*.
+  - Successfully populated, 7-point pre-submit verified, and submitted via live batch execution.
+  - Verified persistence in `#myTable`:
+    `1 | 04-04-2026 | Collections as per Order from the DioceseHoly Land | 515 | 💵 | As per order (Holy land) | ₹6,405.00`.
+  - Form reset verified and Receipt No auto-incremented to `516`. Journal status updated to `CONFIRMED`.
+- **Voucher 516 Circuit Breaker Safety Halt**:
+  - Row 5 (Receipts): Date `05-04-2026`, Receipt No `516`, Amount `₹8,000.00`, Head `128` (*Offerings for Daily Expense*), Narration *Donation for Holy Mass*.
+  - After `#submit_form` click, `observe_save()` polled for 30s. Because Voucher 516 was not observed in `#myTable` within the timeout, the Circuit Breaker tripped immediately.
+  - Status transitioned to terminal `UNCERTAIN` (`incident-1793134120`). Batch execution safely halted without touching subsequent transactions (517–531).
+  - All code, tests, and documentation committed and pushed to GitHub main.
+
 ## 8. Security Requirements
 - The `GEMINI_API_KEY` must **never** be exposed, committed, logged, or added to Git.
 - The `.env` file is safely ignored in `.gitignore` and is not tracked.
