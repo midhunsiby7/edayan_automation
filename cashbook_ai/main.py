@@ -21,6 +21,7 @@ from src.models import ProcessedRow, RawExtractedRow, RecordType, TransactionTyp
 from src.normalization.date_normalizer import DateNormalizer
 from src.preprocessing.image_preprocessor import ImagePreprocessor
 from src.validation.accounting_rules import AccountingRuleEngine
+from src.validation.head_master import HeadMasterRepository
 
 # Setup logging
 logging.basicConfig(level=getattr(logging, LOG_LEVEL.upper(), logging.INFO), format=LOG_FORMAT)
@@ -37,7 +38,11 @@ class CashbookPipeline:
         
         # Stateful across pages within one monthly job
         self.date_normalizer = DateNormalizer()
-        self.rule_engine = AccountingRuleEngine(date_normalizer=self.date_normalizer)
+        self.head_master_repo = HeadMasterRepository(Path("data/reference/active/accounting_heads_general_verified.csv"))
+        self.rule_engine = AccountingRuleEngine(
+            date_normalizer=self.date_normalizer,
+            head_master_repo=self.head_master_repo
+        )
         self.exporter = ExcelExporter()
 
     def process_images(self, image_paths: List[Path], output_excel_path: Path) -> Tuple[Path, Path]:
@@ -47,16 +52,8 @@ class CashbookPipeline:
         all_processed_rows: List[ProcessedRow] = []
         all_raw_rows: List[RawExtractedRow] = []
 
-        # Sort image paths chronologically (April 8.39.33 before August 8.39.28)
-        def get_img_order(p: Path):
-            name = p.name.lower()
-            if "8.39.33" in name:
-                return (0, name)
-            if "8.39.28" in name:
-                return (1, name)
-            return (2, name)
-
-        sorted_paths = sorted(image_paths, key=get_img_order)
+        # Sort image paths chronologically based on filename (e.g. page_001.jpg, page_002.jpg)
+        sorted_paths = sorted(image_paths, key=lambda p: p.name)
 
         for img_idx, img_path in enumerate(sorted_paths, start=1):
             logger.info(f"--- Processing Page [{img_idx}/{len(sorted_paths)}]: {img_path.name} ---")

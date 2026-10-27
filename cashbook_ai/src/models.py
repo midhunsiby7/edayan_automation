@@ -26,12 +26,17 @@ class AccountSet(str, Enum):
 class MasterSourceType(str, Enum):
     REAL_AI_EXTRACTED = "REAL_AI_EXTRACTED"
     MANUAL_VERIFIED = "MANUAL_VERIFIED"
+    MANUAL_VERIFIED_PENDING = "MANUAL_VERIFIED_PENDING"
     MOCK_TEST = "MOCK_TEST"
 
 
 class AccountingHead(BaseModel):
     account_set: AccountSet
     accounting_head_number: str
+    extracted_head_name: Optional[str] = None
+    human_final_name: Optional[str] = None
+    review_status: Optional[str] = None
+    human_comment: Optional[str] = None
     accounting_head_name: str
     normalized_accounting_head_name: Optional[str] = None
     source_image: Optional[str] = None
@@ -118,15 +123,18 @@ class ProcessedRow(BaseModel):
     resolved_date: Optional[str] = None
 
     # Identifiers
+    raw_head_number: Optional[str] = None
     accounting_head_number: Optional[str] = None
     accounting_head_name: Optional[str] = None
+    subhead: Optional[str] = None
     website_head_value: Optional[str] = None
     website_head_label: Optional[str] = None
+    raw_voucher_number: Optional[str] = None
     voucher_number: Optional[str] = None
 
     # Narrations
     raw_narration: Optional[str] = None
-    english_narration: Optional[str] = None
+    narration_english: Optional[str] = None
 
     # Physical amount evidence preserved
     raw_amount: Optional[str] = None
@@ -145,11 +153,17 @@ class ProcessedRow(BaseModel):
     # Confidence scores
     date_confidence: float = 1.0
     head_confidence: float = 1.0
+    subhead_confidence: float = 1.0
     voucher_confidence: float = 1.0
     narration_confidence: float = 1.0
     amount_confidence: float = 1.0
     extraction_confidence: float = 1.0
+    overall_confidence: float = 1.0
 
     # Human audit flags
-    review_required: bool = False
-    review_reasons: List[str] = Field(default_factory=list)
+    data_review_required: bool = False
+    website_mapping_pending: bool = False
+    review_required: bool = False  # Legacy/aggregate flag
+    review_reason: str = ""
+    review_reasons: List[str] = Field(default_factory=list) # kept for backwards compatibility
+    human_verified: bool = False

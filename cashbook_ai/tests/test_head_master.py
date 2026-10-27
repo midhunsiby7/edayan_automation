@@ -80,3 +80,19 @@ def test_save_and_load(tmp_path: Path):
 
     repo2 = HeadMasterRepository(repo_file)
     assert repo2.get_head_name(AccountSet.GENERAL, "1") == "Test"
+
+
+def test_human_final_name_is_canonical_and_extracted_name_is_preserved(tmp_path: Path):
+    repo_file = tmp_path / "reviewed.csv"
+    repo_file.write_text(
+        "account_set,accounting_head_number,extracted_head_name,human_final_name,review_status,human_comment,accounting_head_name,source_type\n"
+        "GENERAL,14,Extracted Name,Corrected Website Name,CORRECTED,,Corrected Website Name,MANUAL_VERIFIED\n",
+        encoding="utf-8",
+    )
+
+    repo = HeadMasterRepository(repo_file)
+
+    assert repo.get_head_name(AccountSet.GENERAL, "14") == "Corrected Website Name"
+    assert repo.get_extracted_head_name(AccountSet.GENERAL, "14") == "Extracted Name"
+    assert repo._records[AccountSet.GENERAL]["14"].review_status == "CORRECTED"
+    assert repo.get_head_name(AccountSet.GENERAL, "999") is None

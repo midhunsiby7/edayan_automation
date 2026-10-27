@@ -8,6 +8,12 @@ from src.models import AccountSet, AccountingHead, MasterSourceType
 logger = logging.getLogger(__name__)
 
 
+def _parse_source_row(value: Any) -> Optional[int]:
+    if value in (None, ""):
+        return None
+    return int(float(value))
+
+
 class HeadMasterRepository:
     """Provides a lookup service for authoritative Head Master records (JSON)."""
 
@@ -17,7 +23,32 @@ class HeadMasterRepository:
             AccountSet.GENERAL: {},
             AccountSet.AGRICULTURE: {},
         }
+        self.subhead_rules = {}
         self.load()
+        self._load_subhead_rules()
+
+    def _load_subhead_rules(self):
+        rules_path = Path("data/reference/subhead_rules_general.json")
+        if rules_path.exists():
+            try:
+                with open(rules_path, "r", encoding="utf-8") as f:
+                    self.subhead_rules = json.load(f)
+            except Exception as e:
+                logger.error(f"Failed to load subhead rules: {e}")
+
+    def get_subhead_rule(self, head_number: str) -> Optional[str]:
+        if not self.subhead_rules:
+            return None
+            
+        for rule in self.subhead_rules.get("embedded_subheads", []):
+            if rule["accounting_head_number"] == head_number:
+                return rule["rule_type"]
+                
+        for rule in self.subhead_rules.get("narration_subheads", []):
+            if rule["accounting_head_number"] == head_number:
+                return rule["rule_type"]
+                
+        return None
 
     def load(self):
         """Load records from the storage file."""
@@ -30,15 +61,21 @@ class HeadMasterRepository:
                 with open(self.storage_path, "r", encoding="utf-8") as f:
                     reader = csv.DictReader(f)
                     for row in reader:
+                        extracted_name = row.get("extracted_head_name") or row.get("accounting_head_name") or ""
+                        human_final_name = row.get("human_final_name") or None
                         record = AccountingHead(
                             account_set=AccountSet(row["account_set"]),
                             accounting_head_number=row["accounting_head_number"],
-                            accounting_head_name=row["accounting_head_name"],
+                            extracted_head_name=extracted_name,
+                            human_final_name=human_final_name,
+                            review_status=row.get("review_status") or None,
+                            human_comment=row.get("human_comment") or None,
+                            accounting_head_name=human_final_name or row.get("accounting_head_name") or extracted_name,
                             normalized_accounting_head_name=row.get("normalized_accounting_head_name") or None,
                             source_image=row.get("source_image") or None,
                             source_page=row.get("source_page") or None,
-                            source_row=int(row["source_row"]) if row.get("source_row") else None,
-                            extraction_confidence=float(row.get("extraction_confidence", 1.0)),
+                            source_row=_parse_source_row(row.get("source_row")),
+                            extraction_confidence=float(row.get("extraction_confidence") or 1.0),
                             review_required=(row.get("review_required") == "True"),
                             source_type=MasterSourceType(row.get("source_type", MasterSourceType.REAL_AI_EXTRACTED.value))
                         )
@@ -62,7 +99,8 @@ class HeadMasterRepository:
                 with open(self.storage_path, "w", newline="", encoding="utf-8") as f:
                     writer = csv.writer(f)
                     writer.writerow([
-                        "account_set", "accounting_head_number", "accounting_head_name",
+                        "account_set", "accounting_head_number", "extracted_head_name",
+                        "human_final_name", "review_status", "human_comment", "accounting_head_name",
                         "normalized_accounting_head_name", "source_image", "source_page", "source_row",
                         "extraction_confidence", "review_required", "source_type"
                     ])
@@ -71,6 +109,10 @@ class HeadMasterRepository:
                             writer.writerow([
                                 record.account_set.value,
                                 record.accounting_head_number,
+                                record.extracted_head_name or record.accounting_head_name,
+                                record.human_final_name or "",
+                                record.review_status or "",
+                                record.human_comment or "",
                                 record.accounting_head_name,
                                 record.normalized_accounting_head_name or "",
                                 record.source_image or "",
@@ -115,11 +157,22 @@ class HeadMasterRepository:
             self._records[acct_set][head_num] = new_record
 
     def get_head_name(self, account_set: AccountSet, head_number: str) -> Optional[str]:
-        """Lookup the exact head name for a given account set and head number."""
+        """Lookup the authoritative human-final name for a given accounting head."""
         if not head_number:
             return None
         record = self._records.get(account_set, {}).get(head_number)
-        return record.accounting_head_name if record else None
+        if not record:
+            return None
+        return record.human_final_name or record.accounting_head_name
+
+    def get_extracted_head_name(self, account_set: AccountSet, head_number: str) -> Optional[str]:
+        """Return the preserved extracted/master name for audit and embedded subhead rules."""
+        if not head_number:
+            return None
+        record = self._records.get(account_set, {}).get(head_number)
+        if not record:
+            return None
+        return record.extracted_head_name or record.accounting_head_name
 
     def import_verified_csv(self, csv_path: Path, expected_count: Optional[int] = None) -> Dict[str, Any]:
         """
@@ -142,12 +195,16 @@ class HeadMasterRepository:
                     record = AccountingHead(
                         account_set=AccountSet(row["account_set"]),
                         accounting_head_number=row["accounting_head_number"],
-                        accounting_head_name=row["accounting_head_name"],
+                        extracted_head_name=row.get("extracted_head_name") or row.get("accounting_head_name"),
+                        human_final_name=row.get("human_final_name") or None,
+                        review_status=row.get("review_status") or None,
+                        human_comment=row.get("human_comment") or None,
+                        accounting_head_name=row.get("human_final_name") or row.get("accounting_head_name") or row.get("extracted_head_name") or "",
                         normalized_accounting_head_name=row.get("normalized_accounting_head_name") or None,
                         source_image=row.get("source_image") or None,
                         source_page=row.get("source_page") or None,
-                        source_row=int(row["source_row"]) if row.get("source_row") else None,
-                        extraction_confidence=float(row.get("extraction_confidence", 1.0)),
+                        source_row=_parse_source_row(row.get("source_row")),
+                        extraction_confidence=float(row.get("extraction_confidence") or 1.0),
                         review_required=(row.get("review_required", "").lower() == "true"),
                         source_type=MasterSourceType.MANUAL_VERIFIED
                     )

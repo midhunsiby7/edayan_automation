@@ -162,4 +162,53 @@ def test_head_not_found_warning():
     assert processed.website_head_value is None
     assert processed.review_required is True
     assert "HEAD_NOT_FOUND" in processed.review_reasons
-    assert "HEAD_MAPPING_NOT_FOUND" in processed.review_reasons
+
+def test_field_shift_anomaly():
+    """Verify that field shifts (e.g. Malayalam text in voucher) trigger FIELD_SHIFT_SUSPECTED."""
+    from src.validation.head_master import HeadMasterRepository
+    from pathlib import Path
+
+    repo = HeadMasterRepository(Path("dummy.json"))
+    engine = AccountingRuleEngine(DateNormalizer(), head_master_repo=repo)
+    raw = RawExtractedRow(
+        source_image="page1.jpg",
+        source_page="1",
+        source_row=25,
+        raw_date="20",
+        raw_head_number="523",
+        raw_voucher_number="തിരുപ്പിവെട്ട് സംഭാവന",
+        raw_amount="5000",
+        detected_amount_column=1,
+    )
+    processed = engine.process_row(raw)
+    assert "FIELD_SHIFT_SUSPECTED" in processed.review_reasons
+    assert processed.data_review_required is True
+
+def test_website_mapping_independence():
+    """Verify that a missing website mapping does NOT trigger data_review_required, but sets website_mapping_pending."""
+    from src.validation.head_master import HeadMasterRepository
+    from pathlib import Path
+    from src.models import AccountingHead, AccountSet
+
+    # Setup valid accounting head
+    repo_file = Path("dummy.json")
+    repo = HeadMasterRepository(repo_file)
+    repo.add_record(AccountingHead(account_set=AccountSet.GENERAL, accounting_head_number="10", accounting_head_name="Valid Head"))
+    engine = AccountingRuleEngine(DateNormalizer(), head_master_repo=repo)
+
+    raw = RawExtractedRow(
+        source_image="page1.jpg",
+        source_page="1",
+        source_row=10,
+        raw_date="06/04/2024",
+        raw_head_number="10",
+        raw_voucher_number="123",
+        raw_amount="500.00",
+        detected_amount_column=2,
+    )
+    processed = engine.process_row(raw)
+    assert processed.accounting_head_name == "Valid Head"
+    assert processed.website_head_value is None
+    assert processed.website_mapping_pending is True
+    assert processed.data_review_required is False
+    assert processed.review_required is True  # the aggregate flag should be true

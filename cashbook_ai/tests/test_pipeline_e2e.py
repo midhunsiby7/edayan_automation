@@ -73,43 +73,45 @@ def test_mock_pipeline_e2e(tmp_path: Path):
     ws_audit = wb["Extraction_Audit"]
 
     # Verify Opening Balance is excluded from Receipts and Payments
-    receipt_record_types = [ws_receipts.cell(row=r, column=16).value for r in range(2, ws_receipts.max_row + 1) if ws_receipts.cell(row=r, column=16).value]
+    receipt_record_types = [ws_receipts.cell(row=r, column=17).value for r in range(2, ws_receipts.max_row + 1) if ws_receipts.cell(row=r, column=17).value]
     assert RecordType.OPENING_BALANCE.value not in receipt_record_types
 
-    payment_record_types = [ws_payments.cell(row=r, column=16).value for r in range(2, ws_payments.max_row + 1) if ws_payments.cell(row=r, column=16).value]
+    payment_record_types = [ws_payments.cell(row=r, column=17).value for r in range(2, ws_payments.max_row + 1) if ws_payments.cell(row=r, column=17).value]
     assert RecordType.OPENING_BALANCE.value not in payment_record_types
 
     # Verify Opening Balance is included in All_Transactions and Extraction_Audit
-    all_record_types = [ws_all.cell(row=r, column=16).value for r in range(2, ws_all.max_row + 1)]
+    all_record_types = [ws_all.cell(row=r, column=17).value for r in range(2, ws_all.max_row + 1)]
     assert RecordType.OPENING_BALANCE.value in all_record_types
 
-    audit_record_types = [ws_audit.cell(row=r, column=25).value for r in range(2, ws_audit.max_row + 1)]
+    audit_record_types = [ws_audit.cell(row=r, column=27).value for r in range(2, ws_audit.max_row + 1)]
     assert RecordType.OPENING_BALANCE.value in audit_record_types
 
-    # Check All_Transactions headers (18 columns including Source Image)
+    # Check All_Transactions headers
     ws_all = wb["All_Transactions"]
-    header_vals = [ws_all.cell(row=1, column=c).value for c in range(1, 19)]
+    header_vals = [ws_all.cell(row=1, column=c).value for c in range(1, 21)]
     assert "Raw Date" in header_vals
     assert "Resolved Date" in header_vals
     assert "Acct Head No" in header_vals
     assert "Acct Head Name" in header_vals
     assert "Web Head Value" in header_vals
     assert "Web Head Label" in header_vals
+    assert "Subhead" in header_vals
     assert "Voucher No" in header_vals
     assert "Raw Narration (Malayalam)" in header_vals
-    assert "English Narration" in header_vals
+    assert "Narration (English)" in header_vals
     assert "Receipt Amount" in header_vals
     assert "Payment Amount" in header_vals
     assert "Transaction Type" in header_vals
     assert "Record Type" in header_vals
     assert "Confidence" in header_vals
-    assert "Review Required" in header_vals
+    assert "Data Review Required" in header_vals
 
     # Check Extraction_Audit sheet has granular confidence headers
     ws_audit = wb["Extraction_Audit"]
-    audit_headers = [ws_audit.cell(row=1, column=c).value for c in range(1, 29)]
+    audit_headers = [ws_audit.cell(row=1, column=c).value for c in range(1, 32)]
     assert "Date Conf" in audit_headers
     assert "Head Conf" in audit_headers
+    assert "Subhead Conf" in audit_headers
     assert "Voucher Conf" in audit_headers
     assert "Narration Conf" in audit_headers
     assert "Amount Conf" in audit_headers

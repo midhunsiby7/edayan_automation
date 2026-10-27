@@ -33,6 +33,7 @@ Thumbs.db
 data/input/
 data/output/
 data/reference/
+data/monthly/
 *.xlsx
 *.xls
 *.csv

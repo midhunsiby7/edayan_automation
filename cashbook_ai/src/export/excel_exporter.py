@@ -30,15 +30,17 @@ class ExcelExporter:
         ("Acct Head Name", "accounting_head_name", 25),
         ("Web Head Value", "website_head_value", 16),
         ("Web Head Label", "website_head_label", 30),
+        ("Subhead", "subhead", 20),
         ("Voucher No", "voucher_number", 12),
         ("Raw Narration (Malayalam)", "raw_narration", 35),
-        ("English Narration", "english_narration", 30),
+        ("Narration (English)", "narration_english", 30),
         ("Receipt Amount", "receipt_amount", 16),
         ("Payment Amount", "payment_amount", 16),
         ("Transaction Type", "transaction_type", 16),
         ("Record Type", "record_type", 18),
         ("Confidence", "extraction_confidence", 12),
-        ("Review Required", "review_required", 15),
+        ("Data Review Required", "data_review_required", 15),
+        ("Web Mapping Pending", "website_mapping_pending", 15),
     ]
 
     AUDIT_COLUMNS = [
@@ -54,10 +56,12 @@ class ExcelExporter:
         ("Web Head Value", "website_head_value", 16),
         ("Web Head Label", "website_head_label", 30),
         ("Head Conf", "head_confidence", 10),
+        ("Subhead", "subhead", 20),
+        ("Subhead Conf", "subhead_confidence", 10),
         ("Voucher No", "voucher_number", 12),
         ("Voucher Conf", "voucher_confidence", 12),
         ("Raw Narration (Malayalam)", "raw_narration", 32),
-        ("English Narration", "english_narration", 28),
+        ("Narration (English)", "narration_english", 28),
         ("Narration Conf", "narration_confidence", 12),
         ("Raw Col 1 (Receipt Col)", "raw_amount_col1", 18),
         ("Raw Col 2 (Payment Col)", "raw_amount_col2", 18),
@@ -68,7 +72,8 @@ class ExcelExporter:
         ("Transaction Type", "transaction_type", 16),
         ("Record Type", "record_type", 18),
         ("Overall Conf", "extraction_confidence", 12),
-        ("Review Required", "review_required", 15),
+        ("Data Review Req", "data_review_required", 15),
+        ("Web Mapping Pending", "website_mapping_pending", 15),
         ("Review Reasons / Warnings", "review_reasons", 45),
     ]
 
@@ -97,7 +102,15 @@ class ExcelExporter:
         # 3. All_Transactions Sheet
         self._write_sheet(wb, "All_Transactions", self.STANDARD_COLUMNS, rows)
 
-        # 4. Extraction_Audit Sheet
+        # 4. Review_Required Sheet
+        review_rows = [r for r in rows if r.data_review_required]
+        self._write_sheet(wb, "Review_Required", self.STANDARD_COLUMNS, review_rows)
+
+        # 5. Website_Mapping_Pending Sheet
+        pending_mapping_rows = [r for r in rows if r.website_mapping_pending]
+        self._write_sheet(wb, "Website_Mapping_Pending", self.STANDARD_COLUMNS, pending_mapping_rows)
+
+        # 6. Extraction_Audit Sheet
         self._write_audit_sheet(wb, "Extraction_Audit", self.AUDIT_COLUMNS, rows)
 
         # Save workbook
@@ -176,7 +189,7 @@ class ExcelExporter:
                 if field_key in ("receipt_amount", "payment_amount"):
                     cell.alignment = align_right
                     cell.number_format = "#,##0.00"
-                elif field_key in ("source_page", "source_row", "resolved_date", "raw_date", "accounting_head_number", "website_head_value", "voucher_number", "review_required"):
+                elif field_key in ("source_page", "source_row", "resolved_date", "raw_date", "accounting_head_number", "website_head_value", "voucher_number", "data_review_required", "website_mapping_pending"):
                     cell.alignment = align_center
                 elif field_key in ("extraction_confidence",):
                     cell.alignment = align_center
@@ -244,7 +257,7 @@ class ExcelExporter:
                 elif "confidence" in field_key or "conf" in field_key:
                     cell.alignment = align_center
                     cell.number_format = "0.00"
-                elif field_key in ("source_page", "source_row", "resolved_date", "raw_date", "accounting_head_number", "website_head_value", "voucher_number", "review_required", "detected_amount_column"):
+                elif field_key in ("source_page", "source_row", "resolved_date", "raw_date", "accounting_head_number", "website_head_value", "voucher_number", "data_review_required", "website_mapping_pending", "detected_amount_column"):
                     cell.alignment = align_center
                 else:
                     cell.alignment = align_left

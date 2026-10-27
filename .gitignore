@@ -57,3 +57,7 @@ preprocessed/
 !cashbook_ai/data/
 !cashbook_ai/data/samples/
 !cashbook_ai/data/samples/.gitkeep
+
+# Local tooling / graphify output
+graphify-out/
+

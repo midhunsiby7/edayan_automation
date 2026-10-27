@@ -63,6 +63,17 @@ class AccountingRuleEngine:
         voucher_num, voucher_err = TextNormalizer.normalize_voucher_number(raw_row.raw_voucher_number)
         if voucher_err:
             reasons.append(f"Voucher number: {voucher_err}")
+            
+        # 2b. Field Shift Suspected check
+        if raw_row.raw_voucher_number:
+            has_malayalam = bool(re.search(r'[\u0D00-\u0D7F]', raw_row.raw_voucher_number))
+            if has_malayalam:
+                reasons.append("FIELD_SHIFT_SUSPECTED")
+        if head_num and head_num.isdigit() and int(head_num) > 200:
+            reasons.append("FIELD_SHIFT_SUSPECTED")
+        # simple check for date being just a day without slashes or dots
+        if raw_row.raw_date and raw_row.raw_date.isdigit() and len(raw_row.raw_date) <= 2:
+            reasons.append("FIELD_SHIFT_SUSPECTED")
 
         # 3. Clean Narrations
         clean_raw_narration = TextNormalizer.clean_narration(raw_row.raw_narration)
@@ -73,9 +84,25 @@ class AccountingRuleEngine:
 
         # 4b. Resolve Accounting Head Name using Head Master
         accounting_head_name = None
+        subhead = None
         if head_num and self.head_master_repo:
-            accounting_head_name = self.head_master_repo.get_head_name(self.account_set, head_num)
-            if not accounting_head_name and record_type == RecordType.TRANSACTION:
+            canonical_head_name = self.head_master_repo.get_head_name(self.account_set, head_num)
+            extracted_head_name = self.head_master_repo.get_extracted_head_name(self.account_set, head_num)
+            if canonical_head_name:
+                accounting_head_name = canonical_head_name
+                
+                # Apply subhead rules
+                rule = self.head_master_repo.get_subhead_rule(head_num)
+                if rule == "extract_after_colon":
+                    source_name = extracted_head_name or canonical_head_name
+                    if ":" in source_name:
+                        parts = source_name.split(":", 1)
+                        accounting_head_name = canonical_head_name.split(":", 1)[0].strip()
+                        subhead = parts[1].strip()
+                elif rule == "extract_from_narration":
+                    # Placeholder for future narration-based subhead extraction
+                    pass
+            elif record_type == RecordType.TRANSACTION:
                 reasons.append("HEAD_NOT_FOUND")
 
         # 5. Amount & Physical Column Classification (Receipt vs Payment)
@@ -142,18 +169,19 @@ class AccountingRuleEngine:
             if record_type == RecordType.TRANSACTION:
                 reasons.append("Missing transaction amount")
 
-        # 5b. Resolve Website Head Mapping
         website_head_value = None
         website_head_label = None
+        website_mapping_pending = False
         
-        # Currently no mapping repository is integrated, so valid mapped values remain None.
-        # As per rules: if no valid mapping exists for a transaction, flag HEAD_MAPPING_NOT_FOUND.
+        # As per rules: if no valid mapping exists for a transaction but accounting head is found, it's just pending.
+        # If accounting head is not found, data_review is required.
         if record_type == RecordType.TRANSACTION and head_num:
-            if not website_head_value:
-                reasons.append("HEAD_MAPPING_NOT_FOUND")
+            if not website_head_value and accounting_head_name:
+                website_mapping_pending = True
 
         # 6. Evaluate Confidence Scores and Review Triggers
         review_required = False
+        data_review_required = False
 
         if raw_row.extraction_confidence < CONFIDENCE_THRESHOLD:
             reasons.append(
@@ -173,7 +201,11 @@ class AccountingRuleEngine:
             reasons.append(f"Low voucher confidence ({raw_row.voucher_confidence:.2f})")
 
         if len(reasons) > 0:
+            data_review_required = True
             review_required = True
+        
+        if website_mapping_pending:
+            review_required = True  # Aggregate flag remains true if anything needs review
 
         return ProcessedRow(
             source_image=raw_row.source_image,
@@ -182,13 +214,16 @@ class AccountingRuleEngine:
             row_bbox=raw_row.row_bbox,
             raw_date=raw_row.raw_date,
             resolved_date=resolved_date,
+            raw_head_number=raw_row.raw_head_number,
             accounting_head_number=head_num,
             accounting_head_name=accounting_head_name,
+            subhead=subhead,
             website_head_value=website_head_value,
             website_head_label=website_head_label,
+            raw_voucher_number=raw_row.raw_voucher_number,
             voucher_number=voucher_num,
             raw_narration=clean_raw_narration,
-            english_narration=clean_eng_narration,
+            narration_english=clean_eng_narration,
             raw_amount=raw_row.raw_amount,
             raw_amount_col1=raw_row.raw_amount_col1,
             raw_amount_col2=raw_row.raw_amount_col2,
@@ -199,11 +234,16 @@ class AccountingRuleEngine:
             record_type=record_type,
             date_confidence=raw_row.date_confidence,
             head_confidence=raw_row.head_confidence,
+            subhead_confidence=1.0,
             voucher_confidence=raw_row.voucher_confidence,
             narration_confidence=raw_row.narration_confidence,
             amount_confidence=raw_row.amount_confidence,
             extraction_confidence=raw_row.extraction_confidence,
+            overall_confidence=raw_row.extraction_confidence, # derived/simplified for now
+            data_review_required=data_review_required,
+            website_mapping_pending=website_mapping_pending,
             review_required=review_required,
+            review_reason="; ".join(reasons) if reasons else "",
             review_reasons=reasons,
         )
 
