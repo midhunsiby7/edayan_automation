@@ -162,7 +162,11 @@ class RelayBrowserEntryAdapter:
             if direction == "RECEIPT"
             else "https://account.edayan.org/transactions/payment"
         )
-        self.client.navigate(target_url)
+        current_dom = self.client.get_dom()
+        current_url = str(current_dom.get("url", ""))
+        if not current_url.startswith(target_url):
+            self.client.navigate(target_url)
+            time.sleep(1.0)
 
         selectors = entry.get("selectors", {})
         date_sel = selectors.get("date", "#datepicker1")
@@ -191,12 +195,12 @@ class RelayBrowserEntryAdapter:
 
         # 5. Subhead
         subhead_name = entry.get("subhead")
-        observed = wait_for_subhead(
-            lambda: self.client.get_dom(subhead_sel),
-            timeout_seconds=20,
-            interval_seconds=0.5,
-        )
         if subhead_name:
+            observed = wait_for_subhead(
+                lambda: self.client.get_dom(subhead_sel),
+                timeout_seconds=20,
+                interval_seconds=0.5,
+            )
             html = str(observed.get("html", ""))
             match = re.search(
                 rf'<option\s+value="([^"]+)"[^>]*>\s*{re.escape(subhead_name)}\s*</option>',
@@ -545,7 +549,7 @@ def wait_for_subhead(
         state = last.get("state")
         if state in {"options", "no_options"}:
             return last
-        html = str(last.get("html", ""))
+        html = str(last.get("html", "")).strip()
         if 'value="0">No Heads Exist' in html:
             return dict(last, state="no_options")
         if re.search(r'<option\s+value="(?!0")[^"]*"', html):
