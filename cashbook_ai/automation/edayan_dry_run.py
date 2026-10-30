@@ -20,6 +20,49 @@ DEFAULT_MASTER = Path("data/reference/active/accounting_heads_general_verified.c
 DEFAULT_WEBSITE_HTML = Path("data/reference/website_heads.html")
 DEFAULT_SUBHEADS = Path("data/reference/website_subheads_observed.json")
 
+SUBHEAD_ALIASES: dict[str, str] = {
+    "sacristan": "sacristian",
+    "sacristian": "sacristan",
+}
+
+
+def resolve_subhead_option(name: str, options: dict[str, Any]) -> tuple[str, str] | None:
+    """Resolve workbook subhead name to a website (value, label) pair deterministically.
+
+    Supports exact case-insensitive matching and known verified aliases.
+    Returns None if no match or if multiple conflicting matches exist.
+    """
+    if not name or not options:
+        return None
+    name_clean = name.strip()
+    name_lower = name_clean.lower()
+
+    # 1. Exact match (case-insensitive, trimmed)
+    exact_matches = [
+        (str(val), str(label).strip())
+        for val, label in options.items()
+        if str(label).strip().lower() == name_lower
+    ]
+    if len(exact_matches) == 1:
+        return exact_matches[0]
+    if len(exact_matches) > 1:
+        return None
+
+    # 2. Alias match
+    alias_target = SUBHEAD_ALIASES.get(name_lower)
+    if alias_target:
+        alias_matches = [
+            (str(val), str(label).strip())
+            for val, label in options.items()
+            if str(label).strip().lower() == alias_target
+        ]
+        if len(alias_matches) == 1:
+            return alias_matches[0]
+        if len(alias_matches) > 1:
+            return None
+
+    return None
+
 # This is deliberately narrow: it records the one live observation made during
 # reconnaissance, rather than guessing that every debit head has no subheads.
 def _text(value: Any) -> str:
@@ -201,8 +244,10 @@ def _validate_row(
     if subhead_state == "options":
         if not subhead:
             issues.append("Subhead is required: selected Head has selectable options")
-        elif subhead not in subhead_options.values():
-            issues.append("Workbook Subhead is not an available website option")
+        else:
+            resolved_sub = resolve_subhead_option(subhead, subhead_options)
+            if not resolved_sub:
+                issues.append("Workbook Subhead is not an available website option")
     elif subhead_state == "no_options":
         if subhead:
             issues.append("Workbook Subhead is populated but selected Head has no website Subhead options")

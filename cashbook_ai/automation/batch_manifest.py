@@ -83,14 +83,21 @@ def generate_batch_manifest(
     direction: str = "RECEIPT",
     target_voucher_start: int | None = None,
     target_voucher_end: int | None = None,
+    authorized_vouchers: list[int] | None = None,
     manifest_id: str | None = None,
 ) -> BatchManifest:
     """Generate a DRAFT batch manifest from dry-run report and journal data.
 
-    Only transactions with status == READY, matching the requested direction,
-    not previously CONFIRMED or UNCERTAIN in the journal, and falling into the
-    contiguous voucher range are authorized.
-    All others are explicitly preserved in excluded_entries with detailed reasons.
+    Transactions are authorized when they satisfy ALL of:
+    - direction matches the batch direction
+    - dry-run status == READY
+    - not previously CONFIRMED or UNCERTAIN in the journal
+    - if authorized_vouchers is given: voucher number is in that explicit set
+    - if target_voucher_start/end are given: voucher number is within that range
+    - if neither filter is given: ALL eligible READY transactions are authorized
+      (non-contiguous voucher numbers are valid and included by default)
+
+    All excluded transactions are listed explicitly with reasons.
     """
     direction = direction.upper()
     if direction not in {"RECEIPT", "PAYMENT"}:
@@ -112,41 +119,10 @@ def generate_batch_manifest(
             if v_int is not None:
                 confirmed_vouchers.add(v_int)
 
-    # Determine contiguous sequence boundaries if not explicitly specified
-    if target_voucher_start is None:
-        # Find candidates: direction match, READY, not confirmed
-        candidate_vouchers: list[int] = []
-        for e in all_entries:
-            if e.get("direction") == direction and e.get("status") == "READY":
-                key = e.get("submission_key")
-                j_status = journal_entries.get(key, {}).get("status")
-                if j_status not in {"confirmed", "uncertain"}:
-                    v_int = _parse_voucher_int(e.get("receipt_number"))
-                    if v_int is not None:
-                        candidate_vouchers.append(v_int)
-
-        # Detect the longest contiguous run of consecutive voucher numbers
-        candidate_vouchers.sort()
-        best_run: list[int] = []
-        current_run: list[int] = []
-        for v in candidate_vouchers:
-            if not current_run:
-                current_run.append(v)
-            elif v == current_run[-1] + 1:
-                current_run.append(v)
-            elif v == current_run[-1]:
-                # Duplicate number in candidates
-                pass
-            else:
-                if len(current_run) > len(best_run):
-                    best_run = list(current_run)
-                current_run = [v]
-        if len(current_run) > len(best_run):
-            best_run = list(current_run)
-
-        if best_run:
-            target_voucher_start = best_run[0]
-            target_voucher_end = best_run[-1]
+    # Explicit authorized_vouchers whitelist takes priority over range filtering
+    # When neither is specified, ALL eligible transactions are included (no range filter)
+    use_voucher_whitelist = authorized_vouchers is not None
+    use_range_filter = (target_voucher_start is not None or target_voucher_end is not None) and not use_voucher_whitelist
 
     authorized_entries: list[dict[str, Any]] = []
     excluded_entries: list[dict[str, Any]] = []
@@ -232,9 +208,13 @@ def generate_batch_manifest(
             })
             continue
 
-        # Voucher sequence check
-        if target_voucher_start is not None and target_voucher_end is not None:
-            if v_int is None or v_int < target_voucher_start or v_int > target_voucher_end:
+        # Voucher filter — applied only when an explicit constraint is given.
+        # Rule: non-contiguous voucher numbers are valid. A voucher gap does NOT
+        # automatically exclude a legitimate transaction. Filtering is only applied
+        # when the caller explicitly passes authorized_vouchers or a range.
+        if use_voucher_whitelist:
+            assert authorized_vouchers is not None
+            if v_int not in authorized_vouchers:
                 excluded_entries.append({
                     "submission_key": key,
                     "sheet": sheet,
@@ -242,7 +222,19 @@ def generate_batch_manifest(
                     "voucher_number": v_num,
                     "amount": amt,
                     "head_name": e.get("head_name"),
-                    "reason": f"VOUCHER_DISCONTINUITY: Voucher '{v_num}' is outside contiguous batch sequence {target_voucher_start}..{target_voucher_end}",
+                    "reason": f"NOT_IN_WHITELIST: Voucher '{v_num}' is not in the explicit authorized voucher list",
+                })
+                continue
+        elif use_range_filter:
+            if v_int is None or (target_voucher_start is not None and v_int < target_voucher_start) or (target_voucher_end is not None and v_int > target_voucher_end):
+                excluded_entries.append({
+                    "submission_key": key,
+                    "sheet": sheet,
+                    "row": row_num,
+                    "voucher_number": v_num,
+                    "amount": amt,
+                    "head_name": e.get("head_name"),
+                    "reason": f"VOUCHER_RANGE_EXCLUDED: Voucher '{v_num}' is outside requested batch range {target_voucher_start}..{target_voucher_end}",
                 })
                 continue
 
@@ -262,16 +254,29 @@ def generate_batch_manifest(
             "selectors": e.get("selectors", {}),
         })
 
-    # Sort authorized entries by voucher integer for strict sequential execution
-    authorized_entries.sort(key=lambda item: _parse_voucher_int(item["receipt_number"]) or 0)
+    # Sort authorized entries sequentially: standard vouchers 1..N first, then 0/00 contra entries, breaking ties by row
+    authorized_entries.sort(
+        key=lambda item: (
+            1 if (_parse_voucher_int(item["receipt_number"]) or 0) == 0 else 0,
+            _parse_voucher_int(item["receipt_number"]) or 0,
+            item.get("row", 0),
+        )
+    )
     authorized_keys = [item["submission_key"] for item in authorized_entries]
 
     total_amount = round(sum(float(item["amount"]) for item in authorized_entries), 2)
-    voucher_range = (
-        f"{target_voucher_start}-{target_voucher_end}"
-        if target_voucher_start and target_voucher_end
-        else "none"
+
+    # Compute a readable voucher range or list for the batch summary
+    auth_v_ints = sorted(
+        v for v in (_parse_voucher_int(item["receipt_number"]) for item in authorized_entries)
+        if v is not None
     )
+    if use_voucher_whitelist and authorized_vouchers is not None:
+        voucher_range = ",".join(str(v) for v in sorted(authorized_vouchers))
+    elif auth_v_ints:
+        voucher_range = f"{auth_v_ints[0]}-{auth_v_ints[-1]}"
+    else:
+        voucher_range = "none"
 
     batch_summary = {
         "direction": direction,
@@ -282,9 +287,13 @@ def generate_batch_manifest(
     }
 
     if not manifest_id:
-        v_start_label = str(target_voucher_start or "0")
-        v_end_label = str(target_voucher_end or "0")
-        manifest_id = f"batch-{direction.lower()}-{v_start_label}-{v_end_label}"
+        if use_voucher_whitelist and authorized_vouchers is not None:
+            v_label = "-".join(str(v) for v in sorted(authorized_vouchers))
+        elif auth_v_ints:
+            v_label = f"{auth_v_ints[0]}-{auth_v_ints[-1]}"
+        else:
+            v_label = "0-0"
+        manifest_id = f"batch-{direction.lower()}-{v_label}"
 
     return BatchManifest(
         manifest_id=manifest_id,
@@ -301,7 +310,111 @@ def generate_batch_manifest(
     )
 
 
-def validate_manifest(manifest: BatchManifest, workbook_path: Path | None = None) -> None:
+def check_source_completeness(
+    report: Mapping[str, Any],
+    manifest: "BatchManifest",
+    journal: Mapping[str, Any],
+) -> dict[str, Any]:
+    """Verify that every eligible source transaction is accounted for before approval.
+
+    Rule 2: Complete source-to-manifest coverage.
+
+    Eligible source transactions are those with direction matching the manifest and
+    dry-run status == READY (not BLOCKED, not NEEDS_REVIEW). Confirmed transactions
+    are considered already complete. Uncertain transactions require reconciliation first.
+
+    Returns a completeness report dict with 'complete' (bool) and detailed counts.
+    A batch approval should be blocked when 'complete' is False.
+    """
+    direction = manifest.direction.upper()
+    journal_entries = journal.get("entries", {})
+    authorized_keys = set(manifest.authorized_keys)
+    excl_reasons = {e["submission_key"]: e.get("reason", "") for e in manifest.excluded_entries}
+
+    source_count = 0
+    ready_count = 0
+    blocked_count = 0
+    needs_review_count = 0
+    confirmed_count = 0
+    uncertain_count = 0
+    authorized_count = 0
+    unaccounted: list[dict[str, Any]] = []
+
+    for e in report.get("entries", []):
+        if e.get("direction") != direction:
+            continue
+        source_count += 1
+        key = e.get("submission_key", "")
+        status = e.get("status", "")
+        j_status = journal_entries.get(key, {}).get("status", "")
+
+        if j_status == "confirmed":
+            confirmed_count += 1
+        elif j_status == "uncertain":
+            uncertain_count += 1
+        elif status == "BLOCKED":
+            blocked_count += 1
+        elif status == "NEEDS_REVIEW":
+            needs_review_count += 1
+        else:
+            ready_count += 1
+
+        if key in authorized_keys:
+            authorized_count += 1
+        elif j_status not in ("confirmed",) and key not in excl_reasons:
+            # Source transaction not in authorized list and no exclusion reason recorded
+            unaccounted.append({
+                "submission_key": key,
+                "row": e.get("row"),
+                "voucher_number": e.get("receipt_number"),
+                "amount": e.get("amount"),
+                "head_name": e.get("head_name"),
+                "dry_run_status": status,
+                "journal_status": j_status,
+            })
+
+    receipt_total = round(sum(
+        float(e.get("amount", 0)) for e in report.get("entries", [])
+        if e.get("direction") == direction
+    ), 2)
+    authorized_total = manifest.batch_summary.get("total_amount", 0.0)
+    confirmed_total = round(sum(
+        float(e.get("amount", 0)) for e in report.get("entries", [])
+        if e.get("direction") == direction
+        and journal_entries.get(e.get("submission_key", ""), {}).get("status") == "confirmed"
+    ), 2)
+
+    complete = (
+        len(unaccounted) == 0
+        and uncertain_count == 0
+        and needs_review_count == 0
+        and blocked_count == 0
+    )
+
+    return {
+        "complete": complete,
+        "direction": direction,
+        "source_count": source_count,
+        "ready_count": ready_count,
+        "blocked_count": blocked_count,
+        "needs_review_count": needs_review_count,
+        "confirmed_count": confirmed_count,
+        "uncertain_count": uncertain_count,
+        "authorized_count": authorized_count,
+        "source_total": receipt_total,
+        "authorized_total": authorized_total,
+        "confirmed_total": confirmed_total,
+        "unaccounted_entries": unaccounted,
+        "completeness_failures": (
+            ([f"UNCERTAIN_ENTRIES: {uncertain_count} entries require reconciliation before execution"] if uncertain_count else [])
+            + ([f"NEEDS_REVIEW_ENTRIES: {needs_review_count} entries still need review"] if needs_review_count else [])
+            + ([f"BLOCKED_ENTRIES: {blocked_count} entries have blocking validation failures"] if blocked_count else [])
+            + ([f"UNACCOUNTED_ENTRIES: {len(unaccounted)} source transactions are not authorized or excluded"] if unaccounted else [])
+        ),
+    }
+
+
+def validate_manifest(manifest: "BatchManifest", workbook_path: Path | None = None) -> None:
     """Validate manifest integrity, hash, whitelist, and state invariants."""
     wb_path = workbook_path or Path(manifest.workbook_path)
     if not wb_path.is_file():

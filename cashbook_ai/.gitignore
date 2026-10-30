@@ -34,6 +34,8 @@ data/input/
 data/output/
 data/reference/
 data/monthly/
+completed/
+scratch/
 *.xlsx
 *.xls
 *.csv
