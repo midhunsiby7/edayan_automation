@@ -1630,10 +1630,14 @@ def test_approved_workbook_authority_and_kappad_option_4949():
     """
     from automation.edayan_dry_run import run_dry_run
 
+    journal_path = Path("data/archive/2026-04/execution_logs/eday_entry_progress.json")
+    if not journal_path.exists():
+        journal_path = Path("data/output/eday_entry_progress.json")
+
     report = run_dry_run(
         Path("data/monthly/2026-04/2026-04_ready_for_entry.xlsx"),
         Path("data/reference/general_head_crosswalk.csv"),
-        Path("data/output/eday_entry_progress.json"),
+        journal_path,
         master_path=Path("data/reference/active/accounting_heads_general_verified.csv"),
         website_html_path=Path("data/reference/website_heads.csv"),
         subheads_path=Path("data/reference/website_subheads_observed.json"),

@@ -1,26 +1,30 @@
-# Environment and secrets (CRITICAL: NEVER COMMIT SECRETS)
+# =========================================================================
+# Environment and Secrets (CRITICAL: NEVER COMMIT SECRETS)
+# =========================================================================
 .env
 .env.local
 .env.*.local
 *.env
-
-# Allow only .env.example
 !.env.example
 
-# Virtual Environments
+# =========================================================================
+# Virtual Environments and Runtimes
+# =========================================================================
 .venv/
 venv/
 env/
 
-# Byte-compiled / optimized / DLL files
+# =========================================================================
+# Byte-compiled / Optimized / Cache Files
+# =========================================================================
 __pycache__/
 *.py[cod]
 *$py.class
-
-# Testing and coverage
 .pytest_cache/
 
-# IDE and Editor files
+# =========================================================================
+# IDE and OS Files
+# =========================================================================
 .vscode/
 .idea/
 *.swp
@@ -29,13 +33,22 @@ __pycache__/
 .DS_Store
 Thumbs.db
 
-# Real Accounting Data, Photographs, Logs, and Local Outputs (CONFIDENTIAL)
-data/input/
-data/output/
-data/reference/
+# =========================================================================
+# Real Accounting Data, Photographs, Workbooks, Logs, & Manifests (CONFIDENTIAL)
+# =========================================================================
 data/monthly/
+data/completed/
+data/archive/
+data/output/
+data/jobs/
+data/input/
 completed/
-scratch/
+
+# Exclude private reference subdirectories and spreadsheets, keeping only canonical JSON
+data/reference/*
+!data/reference/canonical_accounting_reference.json
+
+# Financial files and workbooks
 *.xlsx
 *.xls
 *.csv
@@ -43,7 +56,25 @@ raw_extractions.json
 *.log
 preprocessed/
 
-# Keep sample directory structure intact with .gitkeep
-!data/
+# Private fixtures and evaluations
+tests/fixtures/provisional_may_eval.json
+
+# Execution manifests and journals
+*manifest*.json
+*journal*.json
+*reconciliation*.json
+*corrections*.json
+*exceptions*.json
+!package.json
+!manifest.json
+!data/reference/canonical_accounting_reference.json
+
+# Local scratch scripts and models
+scratch/
+models/
+*.gguf
+*.bin
+
+# Preserved sample directories
 !data/samples/
 !data/samples/.gitkeep

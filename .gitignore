@@ -1,14 +1,16 @@
-# Environment and secrets (CRITICAL: NEVER COMMIT SECRETS)
+# =========================================================================
+# Environment and Secrets (CRITICAL: NEVER COMMIT SECRETS)
+# =========================================================================
 .env
 .env.local
 .env.*.local
 *.env
-
-# Allow only .env.example
 !.env.example
 !cashbook_ai/.env.example
 
-# Virtual Environments
+# =========================================================================
+# Virtual Environments and Runtimes
+# =========================================================================
 .venv/
 venv/
 env/
@@ -16,13 +18,13 @@ ENV/
 env.bak/
 venv.bak/
 
-# Byte-compiled / optimized / DLL files
+# =========================================================================
+# Byte-compiled / Optimized / Cache Files
+# =========================================================================
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
-
-# Testing and coverage
 .pytest_cache/
 .coverage
 .coverage.*
@@ -32,7 +34,9 @@ coverage.xml
 *.cover
 .hypothesis/
 
-# IDE and Editor files
+# =========================================================================
+# IDE and OS Files
+# =========================================================================
 .vscode/
 .idea/
 *.swp
@@ -41,11 +45,29 @@ coverage.xml
 .DS_Store
 Thumbs.db
 
-# Real Accounting Data, Photographs, Logs, and Local Outputs (CONFIDENTIAL)
-data/input/
-cashbook_ai/data/input/
+# =========================================================================
+# Real Accounting Data, Photographs, Workbooks, Logs, & Manifests (CONFIDENTIAL)
+# =========================================================================
+data/monthly/
+data/completed/
+data/archive/
 data/output/
+data/jobs/
+data/input/
+cashbook_ai/data/monthly/
+cashbook_ai/data/completed/
+cashbook_ai/data/archive/
 cashbook_ai/data/output/
+cashbook_ai/data/jobs/
+cashbook_ai/data/input/
+
+# Exclude private reference subdirectories and spreadsheets, keeping only canonical JSON
+data/reference/*
+cashbook_ai/data/reference/*
+!data/reference/canonical_accounting_reference.json
+!cashbook_ai/data/reference/canonical_accounting_reference.json
+
+# Financial files and workbooks
 *.xlsx
 *.xls
 *.csv
@@ -53,11 +75,34 @@ raw_extractions.json
 *.log
 preprocessed/
 
-# Keep sample directory structure intact with .gitkeep
-!cashbook_ai/data/
+# Private fixtures and evaluations
+tests/fixtures/provisional_may_eval.json
+cashbook_ai/tests/fixtures/provisional_may_eval.json
+
+# Execution manifests and journals
+*manifest*.json
+*journal*.json
+*reconciliation*.json
+*corrections*.json
+*exceptions*.json
+!package.json
+!manifest.json
+!data/reference/canonical_accounting_reference.json
+!cashbook_ai/data/reference/canonical_accounting_reference.json
+
+# Local scratch scripts and models
+scratch/
+cashbook_ai/scratch/
+models/
+cashbook_ai/models/
+*.gguf
+*.bin
+
+# Preserved sample directories
+!data/samples/
+!data/samples/.gitkeep
 !cashbook_ai/data/samples/
 !cashbook_ai/data/samples/.gitkeep
 
 # Local tooling / graphify output
 graphify-out/
-

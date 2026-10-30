@@ -1,0 +1,2490 @@
+{
+  "version": 1,
+  "created_at": "2026-10-30T18:35:00Z",
+  "description": "Authoritative canonical accounting reference database distinguishing accounting identity, subheads, folios, aliases, and website selectors.",
+  "canonical_heads": {
+    "GEN_HEAD_OPENING_BAL": {
+      "canonical_head_id": "GEN_HEAD_OPENING_BAL",
+      "canonical_name": "Opening Balance",
+      "account_set": "GENERAL",
+      "primary_direction": "RECEIPT",
+      "subhead_policy": "PROHIBITED",
+      "is_contra": false,
+      "description": "Opening cash balance",
+      "is_active": true
+    },
+    "GEN_HEAD_ADIMA_KAZHUNNU": {
+      "canonical_head_id": "GEN_HEAD_ADIMA_KAZHUNNU",
+      "canonical_name": "Adima, Kazhunu, Mudi etc.(C)",
+      "account_set": "GENERAL",
+      "primary_direction": "RECEIPT",
+      "subhead_policy": "PROHIBITED",
+      "is_contra": false,
+      "description": "Adima, kazhunnu, mudi offerings",
+      "is_active": true
+    },
+    "GEN_HEAD_ADV_FROM_AGRI": {
+      "canonical_head_id": "GEN_HEAD_ADV_FROM_AGRI",
+      "canonical_name": "Advance from Agriculture Account",
+      "account_set": "GENERAL",
+      "primary_direction": "RECEIPT",
+      "subhead_policy": "PROHIBITED",
+      "is_contra": false,
+      "description": "Advance received from agriculture account",
+      "is_active": true
+    },
+    "GEN_HEAD_BANK_INTEREST": {
+      "canonical_head_id": "GEN_HEAD_BANK_INTEREST",
+      "canonical_name": "Bank Interest/ Other Interest Received (C)",
+      "account_set": "GENERAL",
+      "primary_direction": "RECEIPT",
+      "subhead_policy": "PROHIBITED",
+      "is_contra": false,
+      "description": "Interest received from banks or deposits",
+      "is_active": true
+    },
+    "GEN_HEAD_CANDLE_OFFERINGS": {
+      "canonical_head_id": "GEN_HEAD_CANDLE_OFFERINGS",
+      "canonical_name": "Candle Offerings(C)",
+      "account_set": "GENERAL",
+      "primary_direction": "RECEIPT",
+      "subhead_policy": "PROHIBITED",
+      "is_contra": false,
+      "description": "Candle counter sales / offerings",
+      "is_active": true
+    },
+    "GEN_HEAD_CHURCH_ARTICLES_CHG": {
+      "canonical_head_id": "GEN_HEAD_CHURCH_ARTICLES_CHG",
+      "canonical_name": "Charges from Church Articles",
+      "account_set": "GENERAL",
+      "primary_direction": "RECEIPT",
+      "subhead_policy": "PROHIBITED",
+      "is_contra": false,
+      "description": "Charges collected for church articles",
+      "is_active": true
+    },
+    "GEN_HEAD_FEAST_COLLECTION": {
+      "canonical_head_id": "GEN_HEAD_FEAST_COLLECTION",
+      "canonical_name": "Church Feast - Collection",
+      "account_set": "GENERAL",
+      "primary_direction": "RECEIPT",
+      "subhead_policy": "PROHIBITED",
+      "is_contra": false,
+      "description": "Church feast collection and offerings",
+      "is_active": true
+    },
+    "GEN_HEAD_ORDER_FROM_DIOCESE": {
+      "canonical_head_id": "GEN_HEAD_ORDER_FROM_DIOCESE",
+      "canonical_name": "Collections as per Order from the Diocese",
+      "account_set": "GENERAL",
+      "primary_direction": "RECEIPT",
+      "subhead_policy": "MANDATORY",
+      "is_contra": false,
+      "description": "Mandatory collections ordered by Diocese",
+      "is_active": true
+    },
+    "GEN_HEAD_DEFAULT_FEE_REC": {
+      "canonical_head_id": "GEN_HEAD_DEFAULT_FEE_REC",
+      "canonical_name": "Default Fee Received(C)",
+      "account_set": "GENERAL",
+      "primary_direction": "RECEIPT",
+      "subhead_policy": "PROHIBITED",
+      "is_contra": false,
+      "description": "Default fee received",
+      "is_active": true
+    },
+    "GEN_HEAD_DONATION_DIOCESE_CHARITY": {
+      "canonical_head_id": "GEN_HEAD_DONATION_DIOCESE_CHARITY",
+      "canonical_name": "Donation from Diocese for Charity Works",
+      "account_set": "GENERAL",
+      "primary_direction": "RECEIPT",
+      "subhead_policy": "PROHIBITED",
+      "is_contra": false,
+      "description": "Donations received from Diocese for charity",
+      "is_active": true
+    },
+    "GEN_HEAD_FUNERAL_OFFERINGS": {
+      "canonical_head_id": "GEN_HEAD_FUNERAL_OFFERINGS",
+      "canonical_name": "Funeral Offerings(C)",
+      "account_set": "GENERAL",
+      "primary_direction": "RECEIPT",
+      "subhead_policy": "PROHIBITED",
+      "is_contra": false,
+      "description": "Funeral offerings received",
+      "is_active": true
+    },
+    "GEN_HEAD_MARRIAGE_PASSARAM": {
+      "canonical_head_id": "GEN_HEAD_MARRIAGE_PASSARAM",
+      "canonical_name": "Marriage Offerings (Passaram)(C)",
+      "account_set": "GENERAL",
+      "primary_direction": "RECEIPT",
+      "subhead_policy": "PROHIBITED",
+      "is_contra": false,
+      "description": "Marriage offerings / Passaram share",
+      "is_active": true
+    },
+    "GEN_HEAD_OFFERINGS_DAILY": {
+      "canonical_head_id": "GEN_HEAD_OFFERINGS_DAILY",
+      "canonical_name": "Offerings for Daily Expense(C)",
+      "account_set": "GENERAL",
+      "primary_direction": "RECEIPT",
+      "subhead_policy": "PROHIBITED",
+      "is_contra": false,
+      "description": "Daily expense offerings and donations",
+      "is_active": true
+    },
+    "GEN_HEAD_OFFERINGS_SPECIAL_D": {
+      "canonical_head_id": "GEN_HEAD_OFFERINGS_SPECIAL_D",
+      "canonical_name": "Offerings for Special Purpose(D)",
+      "account_set": "GENERAL",
+      "primary_direction": "RECEIPT",
+      "subhead_policy": "PROHIBITED",
+      "is_contra": false,
+      "description": "Offerings received for special purpose (debit side)",
+      "is_active": true
+    },
+    "GEN_HEAD_DONATION_SPECIAL_C": {
+      "canonical_head_id": "GEN_HEAD_DONATION_SPECIAL_C",
+      "canonical_name": "Donation/Offering for Special Purposes(C)",
+      "account_set": "GENERAL",
+      "primary_direction": "RECEIPT",
+      "subhead_policy": "PROHIBITED",
+      "is_contra": false,
+      "description": "Donation/offering for special purpose (credit side)",
+      "is_active": true
+    },
+    "GEN_HEAD_OFFERINGS_NERCHA_AUCTION": {
+      "canonical_head_id": "GEN_HEAD_OFFERINGS_NERCHA_AUCTION",
+      "canonical_name": "Offerings, Auction, Bhandaram etc-(Nercha)(C)",
+      "account_set": "GENERAL",
+      "primary_direction": "RECEIPT",
+      "subhead_policy": "PROHIBITED",
+      "is_contra": false,
+      "description": "Nercha, auction proceeds, bhandaram, cross chapel collections",
+      "is_active": true
+    },
+    "GEN_HEAD_RENT_BUILDINGS": {
+      "canonical_head_id": "GEN_HEAD_RENT_BUILDINGS",
+      "canonical_name": "Rent from Buildings(C)",
+      "account_set": "GENERAL",
+      "primary_direction": "RECEIPT",
+      "subhead_policy": "PROHIBITED",
+      "is_contra": false,
+      "description": "Rental income from parish buildings",
+      "is_active": true
+    },
+    "GEN_HEAD_RENT_SECURITY": {
+      "canonical_head_id": "GEN_HEAD_RENT_SECURITY",
+      "canonical_name": "Rent Security Received & Refund",
+      "account_set": "GENERAL",
+      "primary_direction": "BOTH",
+      "subhead_policy": "PROHIBITED",
+      "is_contra": false,
+      "description": "Rent security deposits received or refunded",
+      "is_active": true
+    },
+    "GEN_HEAD_SALE_OFFERED_MAT": {
+      "canonical_head_id": "GEN_HEAD_SALE_OFFERED_MAT",
+      "canonical_name": "Sale of Offered Materials (Gold,Silver Etc)",
+      "account_set": "GENERAL",
+      "primary_direction": "RECEIPT",
+      "subhead_policy": "PROHIBITED",
+      "is_contra": false,
+      "description": "Sale proceeds of offered gold/silver materials",
+      "is_active": true
+    },
+    "GEN_HEAD_SALE_OLD_THINGS": {
+      "canonical_head_id": "GEN_HEAD_SALE_OLD_THINGS",
+      "canonical_name": "Sale of Old Things",
+      "account_set": "GENERAL",
+      "primary_direction": "RECEIPT",
+      "subhead_policy": "PROHIBITED",
+      "is_contra": false,
+      "description": "Sale of discarded/old church items",
+      "is_active": true
+    },
+    "GEN_HEAD_SALES_STALL_INC": {
+      "canonical_head_id": "GEN_HEAD_SALES_STALL_INC",
+      "canonical_name": "Sales Stall Income",
+      "account_set": "GENERAL",
+      "primary_direction": "RECEIPT",
+      "subhead_policy": "PROHIBITED",
+      "is_contra": false,
+      "description": "Income from church sales stall",
+      "is_active": true
+    },
+    "GEN_HEAD_SCHOOL_INST_INC": {
+      "canonical_head_id": "GEN_HEAD_SCHOOL_INST_INC",
+      "canonical_name": "School/Other Institutions Income",
+      "account_set": "GENERAL",
+      "primary_direction": "RECEIPT",
+      "subhead_policy": "PROHIBITED",
+      "is_contra": false,
+      "description": "Income from parish school or other institutions",
+      "is_active": true
+    },
+    "GEN_HEAD_SUNDAY_COLLECTION_INC": {
+      "canonical_head_id": "GEN_HEAD_SUNDAY_COLLECTION_INC",
+      "canonical_name": "Sunday Collection (Vedapracharam) Income(C)",
+      "account_set": "GENERAL",
+      "primary_direction": "RECEIPT",
+      "subhead_policy": "PROHIBITED",
+      "is_contra": false,
+      "description": "Sunday collection / Vedapracharam income",
+      "is_active": true
+    },
+    "GEN_HEAD_TOMB_EXP_COLLECTED": {
+      "canonical_head_id": "GEN_HEAD_TOMB_EXP_COLLECTED",
+      "canonical_name": "Tomb Expense Collected(C)",
+      "account_set": "GENERAL",
+      "primary_direction": "RECEIPT",
+      "subhead_policy": "PROHIBITED",
+      "is_contra": false,
+      "description": "Tomb expense collections received",
+      "is_active": true
+    },
+    "GEN_HEAD_TOMB_FEES_COLLECTED": {
+      "canonical_head_id": "GEN_HEAD_TOMB_FEES_COLLECTED",
+      "canonical_name": "Tomb-Fees-Collected(C)",
+      "account_set": "GENERAL",
+      "primary_direction": "RECEIPT",
+      "subhead_policy": "PROHIBITED",
+      "is_contra": false,
+      "description": "Tomb fees collected",
+      "is_active": true
+    },
+    "GEN_HEAD_MISC_INCOME": {
+      "canonical_head_id": "GEN_HEAD_MISC_INCOME",
+      "canonical_name": "Miscellaneous Income(C)",
+      "account_set": "GENERAL",
+      "primary_direction": "RECEIPT",
+      "subhead_policy": "PROHIBITED",
+      "is_contra": false,
+      "description": "General miscellaneous income",
+      "is_active": true
+    },
+    "GEN_HEAD_ADV_TO_AGRI": {
+      "canonical_head_id": "GEN_HEAD_ADV_TO_AGRI",
+      "canonical_name": "Advance to Agriculture Account",
+      "account_set": "GENERAL",
+      "primary_direction": "PAYMENT",
+      "subhead_policy": "PROHIBITED",
+      "is_contra": false,
+      "description": "Advance disbursed to agriculture account",
+      "is_active": true
+    },
+    "GEN_HEAD_ALLOWANCES": {
+      "canonical_head_id": "GEN_HEAD_ALLOWANCES",
+      "canonical_name": "Allowances",
+      "account_set": "GENERAL",
+      "primary_direction": "PAYMENT",
+      "subhead_policy": "MANDATORY",
+      "is_contra": false,
+      "description": "Staff allowances and honoraria (Vicar, Accountant, Sacristan, Sweeper)",
+      "is_active": true
+    },
+    "GEN_HEAD_BANK_CHARGES": {
+      "canonical_head_id": "GEN_HEAD_BANK_CHARGES",
+      "canonical_name": "Bank Charges",
+      "account_set": "GENERAL",
+      "primary_direction": "PAYMENT",
+      "subhead_policy": "PROHIBITED",
+      "is_contra": false,
+      "description": "Bank service charges and fees",
+      "is_active": true
+    },
+    "GEN_HEAD_CATHEDRATICUM": {
+      "canonical_head_id": "GEN_HEAD_CATHEDRATICUM",
+      "canonical_name": "Cathedraticum Fees to the Diocese(D)",
+      "account_set": "GENERAL",
+      "primary_direction": "PAYMENT",
+      "subhead_policy": "PROHIBITED",
+      "is_contra": false,
+      "description": "Cathedraticum fees paid to the Diocese",
+      "is_active": true
+    },
+    "GEN_HEAD_CHURCH_ARTICLES_VEST": {
+      "canonical_head_id": "GEN_HEAD_CHURCH_ARTICLES_VEST",
+      "canonical_name": "Church Articles & Vestments",
+      "account_set": "GENERAL",
+      "primary_direction": "PAYMENT",
+      "subhead_policy": "PROHIBITED",
+      "is_contra": false,
+      "description": "Purchase and upkeep of church articles and vestments",
+      "is_active": true
+    },
+    "GEN_HEAD_FEAST_EXPENSES": {
+      "canonical_head_id": "GEN_HEAD_FEAST_EXPENSES",
+      "canonical_name": "Church Feast - Expenses",
+      "account_set": "GENERAL",
+      "primary_direction": "PAYMENT",
+      "subhead_policy": "PROHIBITED",
+      "is_contra": false,
+      "description": "Expenses incurred for parish feast celebrations",
+      "is_active": true
+    },
+    "GEN_HEAD_COLLECTIONS_PAID_DIOCESE": {
+      "canonical_head_id": "GEN_HEAD_COLLECTIONS_PAID_DIOCESE",
+      "canonical_name": "Collections Paid to the the Diocese",
+      "account_set": "GENERAL",
+      "primary_direction": "PAYMENT",
+      "subhead_policy": "PROHIBITED",
+      "is_contra": false,
+      "description": "Collections disbursed to the Diocese",
+      "is_active": true
+    },
+    "GEN_HEAD_DEFAULT_FEE_PAID": {
+      "canonical_head_id": "GEN_HEAD_DEFAULT_FEE_PAID",
+      "canonical_name": "Default Fee Paid(D)",
+      "account_set": "GENERAL",
+      "primary_direction": "PAYMENT",
+      "subhead_policy": "PROHIBITED",
+      "is_contra": false,
+      "description": "Default fee payment",
+      "is_active": true
+    },
+    "GEN_HEAD_DONATION_DIOCESE_DISB": {
+      "canonical_head_id": "GEN_HEAD_DONATION_DIOCESE_DISB",
+      "canonical_name": "Donation from the Diocese Disbursed",
+      "account_set": "GENERAL",
+      "primary_direction": "PAYMENT",
+      "subhead_policy": "PROHIBITED",
+      "is_contra": false,
+      "description": "Disbursement of diocesan donations",
+      "is_active": true
+    },
+    "GEN_HEAD_ELECTRICITY": {
+      "canonical_head_id": "GEN_HEAD_ELECTRICITY",
+      "canonical_name": "Electricity Charges",
+      "account_set": "GENERAL",
+      "primary_direction": "PAYMENT",
+      "subhead_policy": "PROHIBITED",
+      "is_contra": false,
+      "description": "Electricity and KSEB utility charges",
+      "is_active": true
+    },
+    "GEN_HEAD_FURNITURE": {
+      "canonical_head_id": "GEN_HEAD_FURNITURE",
+      "canonical_name": "Furniture",
+      "account_set": "GENERAL",
+      "primary_direction": "PAYMENT",
+      "subhead_policy": "PROHIBITED",
+      "is_contra": false,
+      "description": "Furniture purchase and maintenance",
+      "is_active": true
+    },
+    "GEN_HEAD_LEGAL_AUDIT": {
+      "canonical_head_id": "GEN_HEAD_LEGAL_AUDIT",
+      "canonical_name": "Legal & Audit Fees",
+      "account_set": "GENERAL",
+      "primary_direction": "PAYMENT",
+      "subhead_policy": "PROHIBITED",
+      "is_contra": false,
+      "description": "Legal counsel and audit fees",
+      "is_active": true
+    },
+    "GEN_HEAD_LICENSE_TAX": {
+      "canonical_head_id": "GEN_HEAD_LICENSE_TAX",
+      "canonical_name": "License & Tax",
+      "account_set": "GENERAL",
+      "primary_direction": "PAYMENT",
+      "subhead_policy": "PROHIBITED",
+      "is_contra": false,
+      "description": "Panchayat licenses, taxes, building tax",
+      "is_active": true
+    },
+    "GEN_HEAD_MACHINERY_EQUIP": {
+      "canonical_head_id": "GEN_HEAD_MACHINERY_EQUIP",
+      "canonical_name": "Machinery & Equipments",
+      "account_set": "GENERAL",
+      "primary_direction": "PAYMENT",
+      "subhead_policy": "PROHIBITED",
+      "is_contra": false,
+      "description": "Machinery, sound systems, office computers",
+      "is_active": true
+    },
+    "GEN_HEAD_REPAIR_MAINTENANCE": {
+      "canonical_head_id": "GEN_HEAD_REPAIR_MAINTENANCE",
+      "canonical_name": "Repair & Maintenance",
+      "account_set": "GENERAL",
+      "primary_direction": "PAYMENT",
+      "subhead_policy": "PROHIBITED",
+      "is_contra": false,
+      "description": "General parish and church maintenance and repairs",
+      "is_active": true
+    },
+    "GEN_HEAD_MISC_EXPENSES": {
+      "canonical_head_id": "GEN_HEAD_MISC_EXPENSES",
+      "canonical_name": "Miscellaneous Expenses",
+      "account_set": "GENERAL",
+      "primary_direction": "PAYMENT",
+      "subhead_policy": "PROHIBITED",
+      "is_contra": false,
+      "description": "General petty and miscellaneous expenses",
+      "is_active": true
+    },
+    "GEN_HEAD_NEW_CONSTRUCTION": {
+      "canonical_head_id": "GEN_HEAD_NEW_CONSTRUCTION",
+      "canonical_name": "New Construction",
+      "account_set": "GENERAL",
+      "primary_direction": "PAYMENT",
+      "subhead_policy": "PROHIBITED",
+      "is_contra": false,
+      "description": "Capital construction and building work",
+      "is_active": true
+    },
+    "GEN_HEAD_PASSARAM_SHARE": {
+      "canonical_head_id": "GEN_HEAD_PASSARAM_SHARE",
+      "canonical_name": "Passaram Share to ADCP/Accountant/Sacristian",
+      "account_set": "GENERAL",
+      "primary_direction": "PAYMENT",
+      "subhead_policy": "PROHIBITED",
+      "is_contra": false,
+      "description": "Passaram shares paid to staff/clergy",
+      "is_active": true
+    },
+    "GEN_HEAD_TELEPHONE_POSTAGE": {
+      "canonical_head_id": "GEN_HEAD_TELEPHONE_POSTAGE",
+      "canonical_name": "Telephone & Postage",
+      "account_set": "GENERAL",
+      "primary_direction": "PAYMENT",
+      "subhead_policy": "PROHIBITED",
+      "is_contra": false,
+      "description": "Postage, courier, phone bills, internet",
+      "is_active": true
+    },
+    "GEN_HEAD_PRINTING_STATIONERY": {
+      "canonical_head_id": "GEN_HEAD_PRINTING_STATIONERY",
+      "canonical_name": "Printing & Stationary",
+      "account_set": "GENERAL",
+      "primary_direction": "PAYMENT",
+      "subhead_policy": "PROHIBITED",
+      "is_contra": false,
+      "description": "Printing of receipts, registers, stationery",
+      "is_active": true
+    },
+    "GEN_HEAD_RENTED_BLDG_EXP": {
+      "canonical_head_id": "GEN_HEAD_RENTED_BLDG_EXP",
+      "canonical_name": "Rented Building Expense",
+      "account_set": "GENERAL",
+      "primary_direction": "PAYMENT",
+      "subhead_policy": "PROHIBITED",
+      "is_contra": false,
+      "description": "Expenses for rented parish buildings",
+      "is_active": true
+    },
+    "GEN_HEAD_SCHOOL_INST_EXP": {
+      "canonical_head_id": "GEN_HEAD_SCHOOL_INST_EXP",
+      "canonical_name": "School/Other Institutions Expenses",
+      "account_set": "GENERAL",
+      "primary_direction": "PAYMENT",
+      "subhead_policy": "PROHIBITED",
+      "is_contra": false,
+      "description": "Expenses related to parish school and institutions",
+      "is_active": true
+    },
+    "GEN_HEAD_SOCIAL_WORK_CHARITY": {
+      "canonical_head_id": "GEN_HEAD_SOCIAL_WORK_CHARITY",
+      "canonical_name": "Social Work & Charity (old)",
+      "account_set": "GENERAL",
+      "primary_direction": "PAYMENT",
+      "subhead_policy": "PROHIBITED",
+      "is_contra": false,
+      "description": "Parish charity and aid disbursals",
+      "is_active": true
+    },
+    "GEN_HEAD_SUNDAY_COLL_DIOCESE": {
+      "canonical_head_id": "GEN_HEAD_SUNDAY_COLL_DIOCESE",
+      "canonical_name": "Sunday Collection (Vedapracharam)to the Diocese(D)",
+      "account_set": "GENERAL",
+      "primary_direction": "PAYMENT",
+      "subhead_policy": "PROHIBITED",
+      "is_contra": false,
+      "description": "Vedapracharam collection remitted to Diocese",
+      "is_active": true
+    },
+    "GEN_HEAD_SUNDAY_SCHOOL_EXP": {
+      "canonical_head_id": "GEN_HEAD_SUNDAY_SCHOOL_EXP",
+      "canonical_name": "Sunday School Expense",
+      "account_set": "GENERAL",
+      "primary_direction": "PAYMENT",
+      "subhead_policy": "PROHIBITED",
+      "is_contra": false,
+      "description": "Sunday school / catechetical expenses",
+      "is_active": true
+    },
+    "GEN_HEAD_TRAVELLING_EXP": {
+      "canonical_head_id": "GEN_HEAD_TRAVELLING_EXP",
+      "canonical_name": "Travelling Expense",
+      "account_set": "GENERAL",
+      "primary_direction": "PAYMENT",
+      "subhead_policy": "PROHIBITED",
+      "is_contra": false,
+      "description": "Clergy and staff travelling expenses",
+      "is_active": true
+    },
+    "GEN_HEAD_WINE_CANDLE_HOST": {
+      "canonical_head_id": "GEN_HEAD_WINE_CANDLE_HOST",
+      "canonical_name": "Wine,Candle, Host, ,Incense Etc.",
+      "account_set": "GENERAL",
+      "primary_direction": "PAYMENT",
+      "subhead_policy": "PROHIBITED",
+      "is_contra": false,
+      "description": "Altar bread/hosts, mass wine, altar candles, incense",
+      "is_active": true
+    },
+    "GEN_HEAD_ADCP_NCF_PWF": {
+      "canonical_head_id": "GEN_HEAD_ADCP_NCF_PWF",
+      "canonical_name": "A.D.C.P, N.C.F, P.W.F.",
+      "account_set": "GENERAL",
+      "primary_direction": "PAYMENT",
+      "subhead_policy": "PROHIBITED",
+      "is_contra": false,
+      "description": "Diocesan welfare and mutual aid funds",
+      "is_active": true
+    },
+    "GEN_HEAD_BANK_SIB_KAPPAD": {
+      "canonical_head_id": "GEN_HEAD_BANK_SIB_KAPPAD",
+      "canonical_name": "The South Indian Bank Kappad",
+      "account_set": "GENERAL",
+      "primary_direction": "BOTH",
+      "subhead_policy": "PROHIBITED",
+      "is_contra": true,
+      "description": "South Indian Bank Kappad branch account",
+      "is_active": true
+    },
+    "GEN_HEAD_BANK_MEENACHIL_EAST": {
+      "canonical_head_id": "GEN_HEAD_BANK_MEENACHIL_EAST",
+      "canonical_name": "Meenachil East urban cooperative bank",
+      "account_set": "GENERAL",
+      "primary_direction": "BOTH",
+      "subhead_policy": "PROHIBITED",
+      "is_contra": true,
+      "description": "Meenachil East Urban Co-operative Bank account",
+      "is_active": true
+    },
+    "GEN_HEAD_BANK_SIB_PALA": {
+      "canonical_head_id": "GEN_HEAD_BANK_SIB_PALA",
+      "canonical_name": "The South Indian Bank Pala",
+      "account_set": "GENERAL",
+      "primary_direction": "BOTH",
+      "subhead_policy": "PROHIBITED",
+      "is_contra": true,
+      "description": "South Indian Bank Pala branch account",
+      "is_active": true
+    },
+    "GEN_HEAD_BANK_SBI": {
+      "canonical_head_id": "GEN_HEAD_BANK_SBI",
+      "canonical_name": "State Bank of India",
+      "account_set": "GENERAL",
+      "primary_direction": "BOTH",
+      "subhead_policy": "PROHIBITED",
+      "is_contra": true,
+      "description": "State Bank of India account",
+      "is_active": true
+    },
+    "GEN_HEAD_BANK_THIDANAD": {
+      "canonical_head_id": "GEN_HEAD_BANK_THIDANAD",
+      "canonical_name": "The Thidanad Co. Operative Bank 1",
+      "account_set": "GENERAL",
+      "primary_direction": "BOTH",
+      "subhead_policy": "PROHIBITED",
+      "is_contra": true,
+      "description": "Thidanad Co-operative Bank account",
+      "is_active": true
+    },
+    "GEN_HEAD_BANK_KOTTAYAM_DIST": {
+      "canonical_head_id": "GEN_HEAD_BANK_KOTTAYAM_DIST",
+      "canonical_name": "Kottayam District Co-operative Bank",
+      "account_set": "GENERAL",
+      "primary_direction": "BOTH",
+      "subhead_policy": "PROHIBITED",
+      "is_contra": true,
+      "description": "Kottayam District Co-operative Bank account",
+      "is_active": true
+    }
+  },
+  "canonical_subheads": {
+    "GEN_SUB_ALLOW_VICAR": {
+      "canonical_subhead_id": "GEN_SUB_ALLOW_VICAR",
+      "parent_head_id": "GEN_HEAD_ALLOWANCES",
+      "canonical_name": "Rev. Fr. Vicar",
+      "website_subhead_value": "338",
+      "is_active": true
+    },
+    "GEN_SUB_ALLOW_ASST": {
+      "canonical_subhead_id": "GEN_SUB_ALLOW_ASST",
+      "parent_head_id": "GEN_HEAD_ALLOWANCES",
+      "canonical_name": "Rev. Fr. Asst",
+      "website_subhead_value": "339",
+      "is_active": true
+    },
+    "GEN_SUB_ALLOW_ACCT": {
+      "canonical_subhead_id": "GEN_SUB_ALLOW_ACCT",
+      "parent_head_id": "GEN_HEAD_ALLOWANCES",
+      "canonical_name": "Accountant",
+      "website_subhead_value": "340",
+      "is_active": true
+    },
+    "GEN_SUB_ALLOW_COMP": {
+      "canonical_subhead_id": "GEN_SUB_ALLOW_COMP",
+      "parent_head_id": "GEN_HEAD_ALLOWANCES",
+      "canonical_name": "Computer Assistant",
+      "website_subhead_value": "341",
+      "is_active": true
+    },
+    "GEN_SUB_ALLOW_SACR": {
+      "canonical_subhead_id": "GEN_SUB_ALLOW_SACR",
+      "parent_head_id": "GEN_HEAD_ALLOWANCES",
+      "canonical_name": "Sacristian",
+      "website_subhead_value": "342",
+      "is_active": true
+    },
+    "GEN_SUB_ALLOW_SWEEP": {
+      "canonical_subhead_id": "GEN_SUB_ALLOW_SWEEP",
+      "parent_head_id": "GEN_HEAD_ALLOWANCES",
+      "canonical_name": "Sweeper",
+      "website_subhead_value": "343",
+      "is_active": true
+    },
+    "GEN_SUB_DIOCESE_CHILDHOOD": {
+      "canonical_subhead_id": "GEN_SUB_DIOCESE_CHILDHOOD",
+      "parent_head_id": "GEN_HEAD_ORDER_FROM_DIOCESE",
+      "canonical_name": "Holy Childhood",
+      "website_subhead_value": "453",
+      "is_active": true
+    },
+    "GEN_SUB_DIOCESE_HOLY_LAND": {
+      "canonical_subhead_id": "GEN_SUB_DIOCESE_HOLY_LAND",
+      "parent_head_id": "GEN_HEAD_ORDER_FROM_DIOCESE",
+      "canonical_name": "Holy Land",
+      "website_subhead_value": "454",
+      "is_active": true
+    },
+    "GEN_SUB_DIOCESE_HUNGER": {
+      "canonical_subhead_id": "GEN_SUB_DIOCESE_HUNGER",
+      "parent_head_id": "GEN_HEAD_ORDER_FROM_DIOCESE",
+      "canonical_name": "Hunger & Disease",
+      "website_subhead_value": "455",
+      "is_active": true
+    },
+    "GEN_SUB_DIOCESE_JUSTICE": {
+      "canonical_subhead_id": "GEN_SUB_DIOCESE_JUSTICE",
+      "parent_head_id": "GEN_HEAD_ORDER_FROM_DIOCESE",
+      "canonical_name": "Justice Sunday",
+      "website_subhead_value": "456",
+      "is_active": true
+    },
+    "GEN_SUB_DIOCESE_KCYM": {
+      "canonical_subhead_id": "GEN_SUB_DIOCESE_KCYM",
+      "parent_head_id": "GEN_HEAD_ORDER_FROM_DIOCESE",
+      "canonical_name": "K.C.Y.M.",
+      "website_subhead_value": "457",
+      "is_active": true
+    },
+    "GEN_SUB_DIOCESE_MASS_MEDIA": {
+      "canonical_subhead_id": "GEN_SUB_DIOCESE_MASS_MEDIA",
+      "parent_head_id": "GEN_HEAD_ORDER_FROM_DIOCESE",
+      "canonical_name": "Mass Media",
+      "website_subhead_value": "458",
+      "is_active": true
+    },
+    "GEN_SUB_DIOCESE_MISSION_SUN": {
+      "canonical_subhead_id": "GEN_SUB_DIOCESE_MISSION_SUN",
+      "parent_head_id": "GEN_HEAD_ORDER_FROM_DIOCESE",
+      "canonical_name": "Mission Sunday",
+      "website_subhead_value": "459",
+      "is_active": true
+    },
+    "GEN_SUB_DIOCESE_SYRO_MALABAR": {
+      "canonical_subhead_id": "GEN_SUB_DIOCESE_SYRO_MALABAR",
+      "parent_head_id": "GEN_HEAD_ORDER_FROM_DIOCESE",
+      "canonical_name": "Mission Syro Malabar (Preshithavaram)",
+      "website_subhead_value": "460",
+      "is_active": true
+    },
+    "GEN_SUB_DIOCESE_PETERS_PENCE": {
+      "canonical_subhead_id": "GEN_SUB_DIOCESE_PETERS_PENCE",
+      "parent_head_id": "GEN_HEAD_ORDER_FROM_DIOCESE",
+      "canonical_name": "Peter's Pence",
+      "website_subhead_value": "461",
+      "is_active": true
+    },
+    "GEN_SUB_DIOCESE_SABHA_DINAM": {
+      "canonical_subhead_id": "GEN_SUB_DIOCESE_SABHA_DINAM",
+      "parent_head_id": "GEN_HEAD_ORDER_FROM_DIOCESE",
+      "canonical_name": "Sabha Dinam",
+      "website_subhead_value": "462",
+      "is_active": true
+    },
+    "GEN_SUB_DIOCESE_JESUS_FRAT": {
+      "canonical_subhead_id": "GEN_SUB_DIOCESE_JESUS_FRAT",
+      "parent_head_id": "GEN_HEAD_ORDER_FROM_DIOCESE",
+      "canonical_name": "Jesus Fraternity",
+      "website_subhead_value": "463",
+      "is_active": true
+    },
+    "GEN_SUB_DIOCESE_MADHYA_VIRUTHA": {
+      "canonical_subhead_id": "GEN_SUB_DIOCESE_MADHYA_VIRUTHA",
+      "parent_head_id": "GEN_HEAD_ORDER_FROM_DIOCESE",
+      "canonical_name": "Madhya Virutha Dinam",
+      "website_subhead_value": "464",
+      "is_active": true
+    },
+    "GEN_SUB_DIOCESE_FAMILY_APOST": {
+      "canonical_subhead_id": "GEN_SUB_DIOCESE_FAMILY_APOST",
+      "parent_head_id": "GEN_HEAD_ORDER_FROM_DIOCESE",
+      "canonical_name": "Family Apostolate",
+      "website_subhead_value": "465",
+      "is_active": true
+    },
+    "GEN_SUB_DIOCESE_CARITAS": {
+      "canonical_subhead_id": "GEN_SUB_DIOCESE_CARITAS",
+      "parent_head_id": "GEN_HEAD_ORDER_FROM_DIOCESE",
+      "canonical_name": "Pala Caritas",
+      "website_subhead_value": "466",
+      "is_active": true
+    },
+    "GEN_SUB_DIOCESE_SEMINARIAN": {
+      "canonical_subhead_id": "GEN_SUB_DIOCESE_SEMINARIAN",
+      "parent_head_id": "GEN_HEAD_ORDER_FROM_DIOCESE",
+      "canonical_name": "Seminarian's Aid Fund",
+      "website_subhead_value": "467",
+      "is_active": true
+    },
+    "GEN_SUB_DIOCESE_AKCC": {
+      "canonical_subhead_id": "GEN_SUB_DIOCESE_AKCC",
+      "parent_head_id": "GEN_HEAD_ORDER_FROM_DIOCESE",
+      "canonical_name": "A.K.C.C. Fund",
+      "website_subhead_value": "468",
+      "is_active": true
+    },
+    "GEN_SUB_DIOCESE_BIBLE_SUN": {
+      "canonical_subhead_id": "GEN_SUB_DIOCESE_BIBLE_SUN",
+      "parent_head_id": "GEN_HEAD_ORDER_FROM_DIOCESE",
+      "canonical_name": "Bible Sunday",
+      "website_subhead_value": "546",
+      "is_active": true
+    },
+    "GEN_SUB_DIOCESE_SABARMATI": {
+      "canonical_subhead_id": "GEN_SUB_DIOCESE_SABARMATI",
+      "parent_head_id": "GEN_HEAD_ORDER_FROM_DIOCESE",
+      "canonical_name": "Mission Sabarmati",
+      "website_subhead_value": "7180",
+      "is_active": true
+    },
+    "GEN_SUB_DIOCESE_OTHER": {
+      "canonical_subhead_id": "GEN_SUB_DIOCESE_OTHER",
+      "parent_head_id": "GEN_HEAD_ORDER_FROM_DIOCESE",
+      "canonical_name": "Other",
+      "website_subhead_value": "7350",
+      "is_active": true
+    }
+  },
+  "historical_folios": [
+    {
+      "folio_number": 1,
+      "account_set": "GENERAL",
+      "year_context": "2026",
+      "direction": "RECEIPT",
+      "canonical_head_id": "GEN_HEAD_OPENING_BAL",
+      "canonical_subhead_id": null,
+      "source_note": "Physical book folio 1 Opening Balance",
+      "financial_year": "2026-2027"
+    },
+    {
+      "folio_number": 2,
+      "account_set": "GENERAL",
+      "year_context": "2026",
+      "direction": "RECEIPT",
+      "canonical_head_id": "GEN_HEAD_ADIMA_KAZHUNNU",
+      "canonical_subhead_id": null,
+      "source_note": "Physical book folio 2 Adima, kazhunnu",
+      "financial_year": "2026-2027"
+    },
+    {
+      "folio_number": 3,
+      "account_set": "GENERAL",
+      "year_context": "2026",
+      "direction": "RECEIPT",
+      "canonical_head_id": "GEN_HEAD_ADV_FROM_AGRI",
+      "canonical_subhead_id": null,
+      "source_note": "Physical book folio 3 Advance from Agriculture",
+      "financial_year": "2026-2027"
+    },
+    {
+      "folio_number": 4,
+      "account_set": "GENERAL",
+      "year_context": "2026",
+      "direction": "RECEIPT",
+      "canonical_head_id": "GEN_HEAD_BANK_SIB_KAPPAD",
+      "canonical_subhead_id": null,
+      "source_note": "Physical book folio 4 Bank F.D. withdrawal Kappad",
+      "financial_year": "2026-2027"
+    },
+    {
+      "folio_number": 5,
+      "account_set": "GENERAL",
+      "year_context": "2026",
+      "direction": "RECEIPT",
+      "canonical_head_id": "GEN_HEAD_BANK_INTEREST",
+      "canonical_subhead_id": null,
+      "source_note": "Physical book folio 5 Bank Interest",
+      "financial_year": "2026-2027"
+    },
+    {
+      "folio_number": 6,
+      "account_set": "GENERAL",
+      "year_context": "2026",
+      "direction": "RECEIPT",
+      "canonical_head_id": "GEN_HEAD_BANK_SIB_KAPPAD",
+      "canonical_subhead_id": null,
+      "source_note": "Physical book folio 6 Bank S.B. withdrawal Kappad",
+      "financial_year": "2026-2027"
+    },
+    {
+      "folio_number": 10,
+      "account_set": "GENERAL",
+      "year_context": "2026",
+      "direction": "RECEIPT",
+      "canonical_head_id": "GEN_HEAD_CANDLE_OFFERINGS",
+      "canonical_subhead_id": null,
+      "source_note": "Physical book folio 10 Candle offerings",
+      "financial_year": "2026-2027"
+    },
+    {
+      "folio_number": 11,
+      "account_set": "GENERAL",
+      "year_context": "2026",
+      "direction": "RECEIPT",
+      "canonical_head_id": "GEN_HEAD_CHURCH_ARTICLES_CHG",
+      "canonical_subhead_id": null,
+      "source_note": "Physical book folio 11 Charges from church articles",
+      "financial_year": "2026-2027"
+    },
+    {
+      "folio_number": 13,
+      "account_set": "GENERAL",
+      "year_context": "2026",
+      "direction": "RECEIPT",
+      "canonical_head_id": "GEN_HEAD_FEAST_COLLECTION",
+      "canonical_subhead_id": null,
+      "source_note": "Physical book folio 13 Church feast collection",
+      "financial_year": "2026-2027"
+    },
+    {
+      "folio_number": 14,
+      "account_set": "GENERAL",
+      "year_context": "2026",
+      "direction": "RECEIPT",
+      "canonical_head_id": "GEN_HEAD_ORDER_FROM_DIOCESE",
+      "canonical_subhead_id": null,
+      "source_note": "Physical book folio 14 Collection as per order from Diocese",
+      "financial_year": "2026-2027"
+    },
+    {
+      "folio_number": 16,
+      "account_set": "GENERAL",
+      "year_context": "2026",
+      "direction": "RECEIPT",
+      "canonical_head_id": "GEN_HEAD_DEFAULT_FEE_REC",
+      "canonical_subhead_id": null,
+      "source_note": "Physical book folio 16 Default fee received",
+      "financial_year": "2026-2027"
+    },
+    {
+      "folio_number": 17,
+      "account_set": "GENERAL",
+      "year_context": "2026",
+      "direction": "RECEIPT",
+      "canonical_head_id": "GEN_HEAD_DONATION_DIOCESE_CHARITY",
+      "canonical_subhead_id": null,
+      "source_note": "Physical book folio 17 Donation from Diocese for charity",
+      "financial_year": "2026-2027"
+    },
+    {
+      "folio_number": 18,
+      "account_set": "GENERAL",
+      "year_context": "2026",
+      "direction": "RECEIPT",
+      "canonical_head_id": "GEN_HEAD_FUNERAL_OFFERINGS",
+      "canonical_subhead_id": null,
+      "source_note": "Physical book folio 18 Funeral offerings",
+      "financial_year": "2026-2027"
+    },
+    {
+      "folio_number": 19,
+      "account_set": "GENERAL",
+      "year_context": "2026",
+      "direction": "RECEIPT",
+      "canonical_head_id": "GEN_HEAD_MARRIAGE_PASSARAM",
+      "canonical_subhead_id": null,
+      "source_note": "Physical book folio 19 Marriage offerings (Passaram)",
+      "financial_year": "2026-2027"
+    },
+    {
+      "folio_number": 20,
+      "account_set": "GENERAL",
+      "year_context": "2026",
+      "direction": "RECEIPT",
+      "canonical_head_id": "GEN_HEAD_OFFERINGS_DAILY",
+      "canonical_subhead_id": null,
+      "source_note": "Physical book folio 20 Offerings for daily expenses",
+      "financial_year": "2026-2027"
+    },
+    {
+      "folio_number": 24,
+      "account_set": "GENERAL",
+      "year_context": "2026",
+      "direction": "RECEIPT",
+      "canonical_head_id": "GEN_HEAD_OFFERINGS_SPECIAL_D",
+      "canonical_subhead_id": null,
+      "source_note": "Physical book folio 24 Offerings for special purpose",
+      "financial_year": "2026-2027"
+    },
+    {
+      "folio_number": 28,
+      "account_set": "GENERAL",
+      "year_context": "2026",
+      "direction": "RECEIPT",
+      "canonical_head_id": "GEN_HEAD_OFFERINGS_NERCHA_AUCTION",
+      "canonical_subhead_id": null,
+      "source_note": "Physical book folio 28 Offerings, auction, nercha, bhandaram",
+      "financial_year": "2026-2027"
+    },
+    {
+      "folio_number": 33,
+      "account_set": "GENERAL",
+      "year_context": "2026",
+      "direction": "RECEIPT",
+      "canonical_head_id": "GEN_HEAD_RENT_BUILDINGS",
+      "canonical_subhead_id": null,
+      "source_note": "Physical book folio 33 Rent from building",
+      "financial_year": "2026-2027"
+    },
+    {
+      "folio_number": 35,
+      "account_set": "GENERAL",
+      "year_context": "2026",
+      "direction": "RECEIPT",
+      "canonical_head_id": "GEN_HEAD_RENT_SECURITY",
+      "canonical_subhead_id": null,
+      "source_note": "Physical book folio 35 Rent security received",
+      "financial_year": "2026-2027"
+    },
+    {
+      "folio_number": 36,
+      "account_set": "GENERAL",
+      "year_context": "2026",
+      "direction": "RECEIPT",
+      "canonical_head_id": "GEN_HEAD_SALE_OFFERED_MAT",
+      "canonical_subhead_id": null,
+      "source_note": "Physical book folio 36 Sale of offered materials",
+      "financial_year": "2026-2027"
+    },
+    {
+      "folio_number": 37,
+      "account_set": "GENERAL",
+      "year_context": "2026",
+      "direction": "RECEIPT",
+      "canonical_head_id": "GEN_HEAD_SALE_OLD_THINGS",
+      "canonical_subhead_id": null,
+      "source_note": "Physical book folio 37 Sale of old things",
+      "financial_year": "2026-2027"
+    },
+    {
+      "folio_number": 38,
+      "account_set": "GENERAL",
+      "year_context": "2026",
+      "direction": "RECEIPT",
+      "canonical_head_id": "GEN_HEAD_SALES_STALL_INC",
+      "canonical_subhead_id": null,
+      "source_note": "Physical book folio 38 Sales stall income",
+      "financial_year": "2026-2027"
+    },
+    {
+      "folio_number": 39,
+      "account_set": "GENERAL",
+      "year_context": "2026",
+      "direction": "RECEIPT",
+      "canonical_head_id": "GEN_HEAD_SCHOOL_INST_INC",
+      "canonical_subhead_id": null,
+      "source_note": "Physical book folio 39 School income",
+      "financial_year": "2026-2027"
+    },
+    {
+      "folio_number": 40,
+      "account_set": "GENERAL",
+      "year_context": "2026",
+      "direction": "RECEIPT",
+      "canonical_head_id": "GEN_HEAD_SUNDAY_COLLECTION_INC",
+      "canonical_subhead_id": null,
+      "source_note": "Physical book folio 40 Sunday collection income",
+      "financial_year": "2026-2027"
+    },
+    {
+      "folio_number": 43,
+      "account_set": "GENERAL",
+      "year_context": "2026",
+      "direction": "RECEIPT",
+      "canonical_head_id": "GEN_HEAD_TOMB_EXP_COLLECTED",
+      "canonical_subhead_id": null,
+      "source_note": "Physical book folio 43 Tomb expense collected",
+      "financial_year": "2026-2027"
+    },
+    {
+      "folio_number": 44,
+      "account_set": "GENERAL",
+      "year_context": "2026",
+      "direction": "RECEIPT",
+      "canonical_head_id": "GEN_HEAD_TOMB_FEES_COLLECTED",
+      "canonical_subhead_id": null,
+      "source_note": "Physical book folio 44 Tomb fund collected",
+      "financial_year": "2026-2027"
+    },
+    {
+      "folio_number": 51,
+      "account_set": "GENERAL",
+      "year_context": "2026",
+      "direction": "PAYMENT",
+      "canonical_head_id": "GEN_HEAD_ADV_TO_AGRI",
+      "canonical_subhead_id": null,
+      "source_note": "Physical book folio 51 Advance to agriculture",
+      "financial_year": "2026-2027"
+    },
+    {
+      "folio_number": 52,
+      "account_set": "GENERAL",
+      "year_context": "2026",
+      "direction": "PAYMENT",
+      "canonical_head_id": "GEN_HEAD_ALLOWANCES",
+      "canonical_subhead_id": "GEN_SUB_ALLOW_VICAR",
+      "source_note": "Physical book folio 52 Allowance Rev. Fr. Vicar",
+      "financial_year": "2026-2027"
+    },
+    {
+      "folio_number": 53,
+      "account_set": "GENERAL",
+      "year_context": "2026",
+      "direction": "PAYMENT",
+      "canonical_head_id": "GEN_HEAD_ALLOWANCES",
+      "canonical_subhead_id": "GEN_SUB_ALLOW_ACCT",
+      "source_note": "Physical book folio 53 Allowance Accountant",
+      "financial_year": "2026-2027"
+    },
+    {
+      "folio_number": 54,
+      "account_set": "GENERAL",
+      "year_context": "2026",
+      "direction": "PAYMENT",
+      "canonical_head_id": "GEN_HEAD_ALLOWANCES",
+      "canonical_subhead_id": "GEN_SUB_ALLOW_COMP",
+      "source_note": "Physical book folio 54 Allowance Computer Assistant",
+      "financial_year": "2026-2027"
+    },
+    {
+      "folio_number": 55,
+      "account_set": "GENERAL",
+      "year_context": "2026",
+      "direction": "PAYMENT",
+      "canonical_head_id": "GEN_HEAD_ALLOWANCES",
+      "canonical_subhead_id": "GEN_SUB_ALLOW_SACR",
+      "source_note": "Physical book folio 55 Allowance Sacristan",
+      "financial_year": "2026-2027"
+    },
+    {
+      "folio_number": 56,
+      "account_set": "GENERAL",
+      "year_context": "2026",
+      "direction": "PAYMENT",
+      "canonical_head_id": "GEN_HEAD_ALLOWANCES",
+      "canonical_subhead_id": "GEN_SUB_ALLOW_SWEEP",
+      "source_note": "Physical book folio 56 Allowance Sweeper",
+      "financial_year": "2026-2027"
+    },
+    {
+      "folio_number": 57,
+      "account_set": "GENERAL",
+      "year_context": "2026",
+      "direction": "PAYMENT",
+      "canonical_head_id": "GEN_HEAD_BANK_CHARGES",
+      "canonical_subhead_id": null,
+      "source_note": "Physical book folio 57 Bank charges",
+      "financial_year": "2026-2027"
+    },
+    {
+      "folio_number": 58,
+      "account_set": "GENERAL",
+      "year_context": "2026",
+      "direction": "PAYMENT",
+      "canonical_head_id": "GEN_HEAD_BANK_SIB_KAPPAD",
+      "canonical_subhead_id": null,
+      "source_note": "Physical book folio 58 Bank F.D. Deposit Kappad",
+      "financial_year": "2026-2027"
+    },
+    {
+      "folio_number": 59,
+      "account_set": "GENERAL",
+      "year_context": "2026",
+      "direction": "PAYMENT",
+      "canonical_head_id": "GEN_HEAD_BANK_SIB_KAPPAD",
+      "canonical_subhead_id": null,
+      "source_note": "Physical book folio 59 Bank S.B. Deposit Kappad",
+      "financial_year": "2026-2027"
+    },
+    {
+      "folio_number": 61,
+      "account_set": "GENERAL",
+      "year_context": "2026",
+      "direction": "PAYMENT",
+      "canonical_head_id": "GEN_HEAD_CATHEDRATICUM",
+      "canonical_subhead_id": null,
+      "source_note": "Physical book folio 61 Cathedraticum fees to Diocese",
+      "financial_year": "2026-2027"
+    },
+    {
+      "folio_number": 62,
+      "account_set": "GENERAL",
+      "year_context": "2026",
+      "direction": "PAYMENT",
+      "canonical_head_id": "GEN_HEAD_CHURCH_ARTICLES_VEST",
+      "canonical_subhead_id": null,
+      "source_note": "Physical book folio 62 Church articles and vestments",
+      "financial_year": "2026-2027"
+    },
+    {
+      "folio_number": 64,
+      "account_set": "GENERAL",
+      "year_context": "2026",
+      "direction": "PAYMENT",
+      "canonical_head_id": "GEN_HEAD_FEAST_EXPENSES",
+      "canonical_subhead_id": null,
+      "source_note": "Physical book folio 64 Church feast expenses",
+      "financial_year": "2026-2027"
+    },
+    {
+      "folio_number": 66,
+      "account_set": "GENERAL",
+      "year_context": "2026",
+      "direction": "PAYMENT",
+      "canonical_head_id": "GEN_HEAD_COLLECTIONS_PAID_DIOCESE",
+      "canonical_subhead_id": null,
+      "source_note": "Physical book folio 66 Collections paid to Diocese",
+      "financial_year": "2026-2027"
+    },
+    {
+      "folio_number": 67,
+      "account_set": "GENERAL",
+      "year_context": "2026",
+      "direction": "PAYMENT",
+      "canonical_head_id": "GEN_HEAD_DEFAULT_FEE_PAID",
+      "canonical_subhead_id": null,
+      "source_note": "Physical book folio 67 Default fee paid",
+      "financial_year": "2026-2027"
+    },
+    {
+      "folio_number": 68,
+      "account_set": "GENERAL",
+      "year_context": "2026",
+      "direction": "PAYMENT",
+      "canonical_head_id": "GEN_HEAD_DONATION_DIOCESE_DISB",
+      "canonical_subhead_id": null,
+      "source_note": "Physical book folio 68 Donation from Diocese disbursed",
+      "financial_year": "2026-2027"
+    },
+    {
+      "folio_number": 69,
+      "account_set": "GENERAL",
+      "year_context": "2026",
+      "direction": "PAYMENT",
+      "canonical_head_id": "GEN_HEAD_ELECTRICITY",
+      "canonical_subhead_id": null,
+      "source_note": "Physical book folio 69 Electricity charges",
+      "financial_year": "2026-2027"
+    },
+    {
+      "folio_number": 70,
+      "account_set": "GENERAL",
+      "year_context": "2026",
+      "direction": "PAYMENT",
+      "canonical_head_id": "GEN_HEAD_FURNITURE",
+      "canonical_subhead_id": null,
+      "source_note": "Physical book folio 70 Furniture",
+      "financial_year": "2026-2027"
+    },
+    {
+      "folio_number": 71,
+      "account_set": "GENERAL",
+      "year_context": "2026",
+      "direction": "PAYMENT",
+      "canonical_head_id": "GEN_HEAD_LEGAL_AUDIT",
+      "canonical_subhead_id": null,
+      "source_note": "Physical book folio 71 Legal and audit fee",
+      "financial_year": "2026-2027"
+    },
+    {
+      "folio_number": 72,
+      "account_set": "GENERAL",
+      "year_context": "2026",
+      "direction": "PAYMENT",
+      "canonical_head_id": "GEN_HEAD_LICENSE_TAX",
+      "canonical_subhead_id": null,
+      "source_note": "Physical book folio 72 License and tax",
+      "financial_year": "2026-2027"
+    },
+    {
+      "folio_number": 73,
+      "account_set": "GENERAL",
+      "year_context": "2026",
+      "direction": "PAYMENT",
+      "canonical_head_id": "GEN_HEAD_MACHINERY_EQUIP",
+      "canonical_subhead_id": null,
+      "source_note": "Physical book folio 73 Machinery and equipment",
+      "financial_year": "2026-2027"
+    },
+    {
+      "folio_number": 74,
+      "account_set": "GENERAL",
+      "year_context": "2026",
+      "direction": "PAYMENT",
+      "canonical_head_id": "GEN_HEAD_REPAIR_MAINTENANCE",
+      "canonical_subhead_id": null,
+      "source_note": "Physical book folio 74 Repair and maintenance",
+      "financial_year": "2026-2027"
+    },
+    {
+      "folio_number": 78,
+      "account_set": "GENERAL",
+      "year_context": "2026",
+      "direction": "PAYMENT",
+      "canonical_head_id": "GEN_HEAD_MISC_EXPENSES",
+      "canonical_subhead_id": null,
+      "source_note": "Physical book folio 78 Miscellaneous expenses",
+      "financial_year": "2026-2027"
+    },
+    {
+      "folio_number": 82,
+      "account_set": "GENERAL",
+      "year_context": "2026",
+      "direction": "PAYMENT",
+      "canonical_head_id": "GEN_HEAD_NEW_CONSTRUCTION",
+      "canonical_subhead_id": null,
+      "source_note": "Physical book folio 82 New construction",
+      "financial_year": "2026-2027"
+    },
+    {
+      "folio_number": 84,
+      "account_set": "GENERAL",
+      "year_context": "2026",
+      "direction": "PAYMENT",
+      "canonical_head_id": "GEN_HEAD_PASSARAM_SHARE",
+      "canonical_subhead_id": null,
+      "source_note": "Physical book folio 84 Passaram share",
+      "financial_year": "2026-2027"
+    },
+    {
+      "folio_number": 85,
+      "account_set": "GENERAL",
+      "year_context": "2026",
+      "direction": "PAYMENT",
+      "canonical_head_id": "GEN_HEAD_TELEPHONE_POSTAGE",
+      "canonical_subhead_id": null,
+      "source_note": "Physical book folio 85 Telephone and postage",
+      "financial_year": "2026-2027"
+    },
+    {
+      "folio_number": 86,
+      "account_set": "GENERAL",
+      "year_context": "2026",
+      "direction": "PAYMENT",
+      "canonical_head_id": "GEN_HEAD_PRINTING_STATIONERY",
+      "canonical_subhead_id": null,
+      "source_note": "Physical book folio 86 Printing and stationery",
+      "financial_year": "2026-2027"
+    },
+    {
+      "folio_number": 87,
+      "account_set": "GENERAL",
+      "year_context": "2026",
+      "direction": "PAYMENT",
+      "canonical_head_id": "GEN_HEAD_RENTED_BLDG_EXP",
+      "canonical_subhead_id": null,
+      "source_note": "Physical book folio 87 Rented building expense",
+      "financial_year": "2026-2027"
+    },
+    {
+      "folio_number": 88,
+      "account_set": "GENERAL",
+      "year_context": "2026",
+      "direction": "PAYMENT",
+      "canonical_head_id": "GEN_HEAD_RENT_SECURITY",
+      "canonical_subhead_id": null,
+      "source_note": "Physical book folio 88 Rent security returned",
+      "financial_year": "2026-2027"
+    },
+    {
+      "folio_number": 89,
+      "account_set": "GENERAL",
+      "year_context": "2026",
+      "direction": "PAYMENT",
+      "canonical_head_id": "GEN_HEAD_SCHOOL_INST_EXP",
+      "canonical_subhead_id": null,
+      "source_note": "Physical book folio 89 School and other institutions expenses",
+      "financial_year": "2026-2027"
+    },
+    {
+      "folio_number": 90,
+      "account_set": "GENERAL",
+      "year_context": "2026",
+      "direction": "PAYMENT",
+      "canonical_head_id": "GEN_HEAD_SOCIAL_WORK_CHARITY",
+      "canonical_subhead_id": null,
+      "source_note": "Physical book folio 90 Social work (charity)",
+      "financial_year": "2026-2027"
+    },
+    {
+      "folio_number": 92,
+      "account_set": "GENERAL",
+      "year_context": "2026",
+      "direction": "PAYMENT",
+      "canonical_head_id": "GEN_HEAD_SUNDAY_COLL_DIOCESE",
+      "canonical_subhead_id": null,
+      "source_note": "Physical book folio 92 Sunday collection to Diocese",
+      "financial_year": "2026-2027"
+    },
+    {
+      "folio_number": 93,
+      "account_set": "GENERAL",
+      "year_context": "2026",
+      "direction": "PAYMENT",
+      "canonical_head_id": "GEN_HEAD_SUNDAY_SCHOOL_EXP",
+      "canonical_subhead_id": null,
+      "source_note": "Physical book folio 93 Sunday school expense",
+      "financial_year": "2026-2027"
+    },
+    {
+      "folio_number": 97,
+      "account_set": "GENERAL",
+      "year_context": "2026",
+      "direction": "PAYMENT",
+      "canonical_head_id": "GEN_HEAD_TRAVELLING_EXP",
+      "canonical_subhead_id": null,
+      "source_note": "Physical book folio 97 Travelling expense",
+      "financial_year": "2026-2027"
+    },
+    {
+      "folio_number": 99,
+      "account_set": "GENERAL",
+      "year_context": "2026",
+      "direction": "PAYMENT",
+      "canonical_head_id": "GEN_HEAD_WINE_CANDLE_HOST",
+      "canonical_subhead_id": null,
+      "source_note": "Physical book folio 99 Wine, host, candle, incense",
+      "financial_year": "2026-2027"
+    },
+    {
+      "folio_number": 101,
+      "account_set": "GENERAL",
+      "year_context": "2026",
+      "direction": "PAYMENT",
+      "canonical_head_id": "GEN_HEAD_ADCP_NCF_PWF",
+      "canonical_subhead_id": null,
+      "source_note": "Physical book folio 101 A.D.C.P, N.C.F, P.W.F.",
+      "financial_year": "2026-2027"
+    }
+  ],
+  "approved_aliases": [
+    {
+      "alias_id": "ALIAS_0001",
+      "target_id": "GEN_HEAD_OFFERINGS_DAILY",
+      "target_type": "HEAD",
+      "alias_text": "നിത്യ ചിലവിലേക്ക് സംഭാവന",
+      "language": "ML",
+      "direction_context": "RECEIPT",
+      "source": "HUMAN_VERIFIED_APRIL_2026",
+      "is_active": true
+    },
+    {
+      "alias_id": "ALIAS_0002",
+      "target_id": "GEN_HEAD_OFFERINGS_DAILY",
+      "target_type": "HEAD",
+      "alias_text": "നിത്യച്ചിലവ് സംഭാവന",
+      "language": "ML",
+      "direction_context": "RECEIPT",
+      "source": "HUMAN_VERIFIED_APRIL_2026",
+      "is_active": true
+    },
+    {
+      "alias_id": "ALIAS_0003",
+      "target_id": "GEN_HEAD_OFFERINGS_DAILY",
+      "target_type": "HEAD",
+      "alias_text": "Daily expenses donation",
+      "language": "EN",
+      "direction_context": "RECEIPT",
+      "source": "HUMAN_VERIFIED_APRIL_2026",
+      "is_active": true
+    },
+    {
+      "alias_id": "ALIAS_0004",
+      "target_id": "GEN_HEAD_OFFERINGS_NERCHA_AUCTION",
+      "target_type": "HEAD",
+      "alias_text": "നേർച്ച",
+      "language": "ML",
+      "direction_context": "RECEIPT",
+      "source": "HUMAN_VERIFIED_APRIL_2026",
+      "is_active": true
+    },
+    {
+      "alias_id": "ALIAS_0005",
+      "target_id": "GEN_HEAD_OFFERINGS_NERCHA_AUCTION",
+      "target_type": "HEAD",
+      "alias_text": "ലേലം വക",
+      "language": "ML",
+      "direction_context": "RECEIPT",
+      "source": "HUMAN_VERIFIED_APRIL_2026",
+      "is_active": true
+    },
+    {
+      "alias_id": "ALIAS_0006",
+      "target_id": "GEN_HEAD_OFFERINGS_NERCHA_AUCTION",
+      "target_type": "HEAD",
+      "alias_text": "കുരിശുപള്ളി",
+      "language": "ML",
+      "direction_context": "RECEIPT",
+      "source": "HUMAN_VERIFIED_APRIL_2026",
+      "is_active": true
+    },
+    {
+      "alias_id": "ALIAS_0007",
+      "target_id": "GEN_HEAD_OFFERINGS_NERCHA_AUCTION",
+      "target_type": "HEAD",
+      "alias_text": "പുവാർകോട് കുരിശുപള്ളി",
+      "language": "ML",
+      "direction_context": "RECEIPT",
+      "source": "HUMAN_VERIFIED_APRIL_2026",
+      "is_active": true
+    },
+    {
+      "alias_id": "ALIAS_0008",
+      "target_id": "GEN_HEAD_OFFERINGS_NERCHA_AUCTION",
+      "target_type": "HEAD",
+      "alias_text": "ചാന്നാംകുളം കുരിശുപള്ളി",
+      "language": "ML",
+      "direction_context": "RECEIPT",
+      "source": "HUMAN_VERIFIED_APRIL_2026",
+      "is_active": true
+    },
+    {
+      "alias_id": "ALIAS_0009",
+      "target_id": "GEN_HEAD_SUNDAY_COLLECTION_INC",
+      "target_type": "HEAD",
+      "alias_text": "വേദപ്രചാര ശേഖരം",
+      "language": "ML",
+      "direction_context": "RECEIPT",
+      "source": "HUMAN_VERIFIED_APRIL_2026",
+      "is_active": true
+    },
+    {
+      "alias_id": "ALIAS_0010",
+      "target_id": "GEN_HEAD_ELECTRICITY",
+      "target_type": "HEAD",
+      "alias_text": "വൈദ്യുതി ബിൽ",
+      "language": "ML",
+      "direction_context": "PAYMENT",
+      "source": "HUMAN_VERIFIED_APRIL_2026",
+      "is_active": true
+    },
+    {
+      "alias_id": "ALIAS_0011",
+      "target_id": "GEN_HEAD_ELECTRICITY",
+      "target_type": "HEAD",
+      "alias_text": "Electricity charges",
+      "language": "EN",
+      "direction_context": "PAYMENT",
+      "source": "HUMAN_VERIFIED_APRIL_2026",
+      "is_active": true
+    },
+    {
+      "alias_id": "ALIAS_0012",
+      "target_id": "GEN_HEAD_TELEPHONE_POSTAGE",
+      "target_type": "HEAD",
+      "alias_text": "ഫോൺ ചാർജ്",
+      "language": "ML",
+      "direction_context": "PAYMENT",
+      "source": "HUMAN_VERIFIED_APRIL_2026",
+      "is_active": true
+    },
+    {
+      "alias_id": "ALIAS_0013",
+      "target_id": "GEN_HEAD_REPAIR_MAINTENANCE",
+      "target_type": "HEAD",
+      "alias_text": "മരാമത്ത് പണി",
+      "language": "ML",
+      "direction_context": "PAYMENT",
+      "source": "HUMAN_VERIFIED_APRIL_2026",
+      "is_active": true
+    },
+    {
+      "alias_id": "ALIAS_0014",
+      "target_id": "GEN_HEAD_REPAIR_MAINTENANCE",
+      "target_type": "HEAD",
+      "alias_text": "പെയിന്റിംഗ്",
+      "language": "ML",
+      "direction_context": "PAYMENT",
+      "source": "HUMAN_VERIFIED_APRIL_2026",
+      "is_active": true
+    },
+    {
+      "alias_id": "ALIAS_0015",
+      "target_id": "GEN_HEAD_SUNDAY_SCHOOL_EXP",
+      "target_type": "HEAD",
+      "alias_text": "വേദപാഠശാല ചിലവ്",
+      "language": "ML",
+      "direction_context": "PAYMENT",
+      "source": "HUMAN_VERIFIED_APRIL_2026",
+      "is_active": true
+    },
+    {
+      "alias_id": "ALIAS_0016",
+      "target_id": "GEN_HEAD_SUNDAY_SCHOOL_EXP",
+      "target_type": "HEAD",
+      "alias_text": "Sunday School Expense",
+      "language": "EN",
+      "direction_context": "PAYMENT",
+      "source": "HUMAN_VERIFIED_APRIL_2026",
+      "is_active": true
+    },
+    {
+      "alias_id": "ALIAS_0017",
+      "target_id": "GEN_HEAD_WINE_CANDLE_HOST",
+      "target_type": "HEAD",
+      "alias_text": "മെഴുകുതിരി വാങ്ങിയത്",
+      "language": "ML",
+      "direction_context": "PAYMENT",
+      "source": "HUMAN_VERIFIED_APRIL_2026",
+      "is_active": true
+    },
+    {
+      "alias_id": "ALIAS_0018",
+      "target_id": "GEN_HEAD_WINE_CANDLE_HOST",
+      "target_type": "HEAD",
+      "alias_text": "Wine, Host, Candle, Incense",
+      "language": "EN",
+      "direction_context": "PAYMENT",
+      "source": "HUMAN_VERIFIED_APRIL_2026",
+      "is_active": true
+    },
+    {
+      "alias_id": "ALIAS_0019",
+      "target_id": "GEN_HEAD_SCHOOL_INST_EXP",
+      "target_type": "HEAD",
+      "alias_text": "School Expense",
+      "language": "EN",
+      "direction_context": "PAYMENT",
+      "source": "HUMAN_VERIFIED_APRIL_2026",
+      "is_active": true
+    },
+    {
+      "alias_id": "ALIAS_0020",
+      "target_id": "GEN_HEAD_SCHOOL_INST_EXP",
+      "target_type": "HEAD",
+      "alias_text": "School Maintenance",
+      "language": "EN",
+      "direction_context": "PAYMENT",
+      "source": "HUMAN_VERIFIED_APRIL_2026",
+      "is_active": true
+    },
+    {
+      "alias_id": "ALIAS_0021",
+      "target_id": "GEN_SUB_ALLOW_VICAR",
+      "target_type": "SUBHEAD",
+      "alias_text": "Rev. Fr. Vicar",
+      "language": "EN",
+      "direction_context": "PAYMENT",
+      "source": "HUMAN_VERIFIED_APRIL_2026",
+      "is_active": true
+    },
+    {
+      "alias_id": "ALIAS_0022",
+      "target_id": "GEN_SUB_ALLOW_VICAR",
+      "target_type": "SUBHEAD",
+      "alias_text": "വികാരിയച്ചൻ അലവൻസ്",
+      "language": "ML",
+      "direction_context": "PAYMENT",
+      "source": "HUMAN_VERIFIED_APRIL_2026",
+      "is_active": true
+    },
+    {
+      "alias_id": "ALIAS_0023",
+      "target_id": "GEN_SUB_ALLOW_VICAR",
+      "target_type": "SUBHEAD",
+      "alias_text": "Vicar",
+      "language": "EN",
+      "direction_context": "PAYMENT",
+      "source": "HUMAN_VERIFIED_APRIL_2026",
+      "is_active": true
+    },
+    {
+      "alias_id": "ALIAS_0024",
+      "target_id": "GEN_SUB_ALLOW_ACCT",
+      "target_type": "SUBHEAD",
+      "alias_text": "Accountant",
+      "language": "EN",
+      "direction_context": "PAYMENT",
+      "source": "HUMAN_VERIFIED_APRIL_2026",
+      "is_active": true
+    },
+    {
+      "alias_id": "ALIAS_0025",
+      "target_id": "GEN_SUB_ALLOW_ACCT",
+      "target_type": "SUBHEAD",
+      "alias_text": "അക്കൗണ്ടന്റ് അലവൻസ്",
+      "language": "ML",
+      "direction_context": "PAYMENT",
+      "source": "HUMAN_VERIFIED_APRIL_2026",
+      "is_active": true
+    },
+    {
+      "alias_id": "ALIAS_0026",
+      "target_id": "GEN_SUB_ALLOW_COMP",
+      "target_type": "SUBHEAD",
+      "alias_text": "Computer Assistant",
+      "language": "EN",
+      "direction_context": "PAYMENT",
+      "source": "HUMAN_VERIFIED_APRIL_2026",
+      "is_active": true
+    },
+    {
+      "alias_id": "ALIAS_0027",
+      "target_id": "GEN_SUB_ALLOW_SACR",
+      "target_type": "SUBHEAD",
+      "alias_text": "Sacristan",
+      "language": "EN",
+      "direction_context": "PAYMENT",
+      "source": "HUMAN_VERIFIED_APRIL_2026",
+      "is_active": true
+    },
+    {
+      "alias_id": "ALIAS_0028",
+      "target_id": "GEN_SUB_ALLOW_SACR",
+      "target_type": "SUBHEAD",
+      "alias_text": "Sacristian",
+      "language": "EN",
+      "direction_context": "PAYMENT",
+      "source": "HUMAN_VERIFIED_APRIL_2026",
+      "is_active": true
+    },
+    {
+      "alias_id": "ALIAS_0029",
+      "target_id": "GEN_SUB_ALLOW_SWEEP",
+      "target_type": "SUBHEAD",
+      "alias_text": "Sweeper",
+      "language": "EN",
+      "direction_context": "PAYMENT",
+      "source": "HUMAN_VERIFIED_APRIL_2026",
+      "is_active": true
+    },
+    {
+      "alias_id": "ALIAS_0030",
+      "target_id": "GEN_SUB_DIOCESE_HOLY_LAND",
+      "target_type": "SUBHEAD",
+      "alias_text": "Holy Land",
+      "language": "EN",
+      "direction_context": "RECEIPT",
+      "source": "HUMAN_VERIFIED_APRIL_2026",
+      "is_active": true
+    },
+    {
+      "alias_id": "ALIAS_0031",
+      "target_id": "GEN_SUB_DIOCESE_SEMINARIAN",
+      "target_type": "SUBHEAD",
+      "alias_text": "Seminarian's Aid Fund",
+      "language": "EN",
+      "direction_context": "RECEIPT",
+      "source": "HUMAN_VERIFIED_APRIL_2026",
+      "is_active": true
+    }
+  ],
+  "website_heads": [
+    {
+      "canonical_head_id": "GEN_HEAD_OPENING_BAL",
+      "website_head_value": "",
+      "website_head_label": "Opening Balance (informational)",
+      "direction": "RECEIPT",
+      "account_set": "GENERAL",
+      "validity": "INACTIVE",
+      "notes": "No website submission for opening balance"
+    },
+    {
+      "canonical_head_id": "GEN_HEAD_ADIMA_KAZHUNNU",
+      "website_head_value": "228",
+      "website_head_label": "Adima, Kazhunu, Mudi etc.(C) ( Debit )",
+      "direction": "RECEIPT",
+      "account_set": "GENERAL",
+      "validity": "ACTIVE",
+      "notes": "Website uses ( Debit ) suffix"
+    },
+    {
+      "canonical_head_id": "GEN_HEAD_ADV_FROM_AGRI",
+      "website_head_value": "620",
+      "website_head_label": "Advance from Agriculture Account  ( Credit )",
+      "direction": "RECEIPT",
+      "account_set": "GENERAL",
+      "validity": "ACTIVE",
+      "notes": ""
+    },
+    {
+      "canonical_head_id": "GEN_HEAD_BANK_INTEREST",
+      "website_head_value": "107",
+      "website_head_label": "Bank Interest/ Other Interest Received (C) ( Credit )",
+      "direction": "RECEIPT",
+      "account_set": "GENERAL",
+      "validity": "ACTIVE",
+      "notes": ""
+    },
+    {
+      "canonical_head_id": "GEN_HEAD_CANDLE_OFFERINGS",
+      "website_head_value": "140",
+      "website_head_label": "Candle Offerings(C) ( Credit )",
+      "direction": "RECEIPT",
+      "account_set": "GENERAL",
+      "validity": "ACTIVE",
+      "notes": ""
+    },
+    {
+      "canonical_head_id": "GEN_HEAD_CHURCH_ARTICLES_CHG",
+      "website_head_value": "141",
+      "website_head_label": "Charges from Church Articles ( Credit )",
+      "direction": "RECEIPT",
+      "account_set": "GENERAL",
+      "validity": "ACTIVE",
+      "notes": ""
+    },
+    {
+      "canonical_head_id": "GEN_HEAD_FEAST_COLLECTION",
+      "website_head_value": "142",
+      "website_head_label": "Church Feast - Collection ( Credit )",
+      "direction": "RECEIPT",
+      "account_set": "GENERAL",
+      "validity": "ACTIVE",
+      "notes": ""
+    },
+    {
+      "canonical_head_id": "GEN_HEAD_ORDER_FROM_DIOCESE",
+      "website_head_value": "143",
+      "website_head_label": "Collections as per Order from the Diocese ( Credit )",
+      "direction": "RECEIPT",
+      "account_set": "GENERAL",
+      "validity": "ACTIVE",
+      "notes": "Requires subhead"
+    },
+    {
+      "canonical_head_id": "GEN_HEAD_DEFAULT_FEE_REC",
+      "website_head_value": "167",
+      "website_head_label": "Default Fee Received(C) ( Credit )",
+      "direction": "RECEIPT",
+      "account_set": "GENERAL",
+      "validity": "ACTIVE",
+      "notes": ""
+    },
+    {
+      "canonical_head_id": "GEN_HEAD_DONATION_DIOCESE_CHARITY",
+      "website_head_value": "147",
+      "website_head_label": "Donation from Diocese for Charity Works ( Credit )",
+      "direction": "RECEIPT",
+      "account_set": "GENERAL",
+      "validity": "ACTIVE",
+      "notes": ""
+    },
+    {
+      "canonical_head_id": "GEN_HEAD_FUNERAL_OFFERINGS",
+      "website_head_value": "149",
+      "website_head_label": "Funeral Offerings(C) ( Credit )",
+      "direction": "RECEIPT",
+      "account_set": "GENERAL",
+      "validity": "ACTIVE",
+      "notes": ""
+    },
+    {
+      "canonical_head_id": "GEN_HEAD_MARRIAGE_PASSARAM",
+      "website_head_value": "151",
+      "website_head_label": "Marriage Offerings (Passaram)(C) ( Credit )",
+      "direction": "RECEIPT",
+      "account_set": "GENERAL",
+      "validity": "ACTIVE",
+      "notes": ""
+    },
+    {
+      "canonical_head_id": "GEN_HEAD_OFFERINGS_DAILY",
+      "website_head_value": "128",
+      "website_head_label": "Offerings for Daily Expense(C) ( Credit )",
+      "direction": "RECEIPT",
+      "account_set": "GENERAL",
+      "validity": "ACTIVE",
+      "notes": ""
+    },
+    {
+      "canonical_head_id": "GEN_HEAD_OFFERINGS_SPECIAL_D",
+      "website_head_value": "153",
+      "website_head_label": "Offerings for Special Purpose(D) ( Debit )",
+      "direction": "RECEIPT",
+      "account_set": "GENERAL",
+      "validity": "ACTIVE",
+      "notes": ""
+    },
+    {
+      "canonical_head_id": "GEN_HEAD_DONATION_SPECIAL_C",
+      "website_head_value": "146",
+      "website_head_label": "Donation/Offering for Special Purposes(C) ( Credit )",
+      "direction": "RECEIPT",
+      "account_set": "GENERAL",
+      "validity": "ACTIVE",
+      "notes": ""
+    },
+    {
+      "canonical_head_id": "GEN_HEAD_OFFERINGS_NERCHA_AUCTION",
+      "website_head_value": "154",
+      "website_head_label": "Offerings, Auction, Bhandaram etc-(Nercha)(C) ( Credit )",
+      "direction": "RECEIPT",
+      "account_set": "GENERAL",
+      "validity": "ACTIVE",
+      "notes": ""
+    },
+    {
+      "canonical_head_id": "GEN_HEAD_RENT_BUILDINGS",
+      "website_head_value": "156",
+      "website_head_label": "Rent from Buildings(C) ( Credit )",
+      "direction": "RECEIPT",
+      "account_set": "GENERAL",
+      "validity": "ACTIVE",
+      "notes": ""
+    },
+    {
+      "canonical_head_id": "GEN_HEAD_RENT_SECURITY",
+      "website_head_value": "157",
+      "website_head_label": "Rent Security Received & Refund ( Credit )",
+      "direction": "RECEIPT",
+      "account_set": "GENERAL",
+      "validity": "ACTIVE",
+      "notes": ""
+    },
+    {
+      "canonical_head_id": "GEN_HEAD_SALE_OFFERED_MAT",
+      "website_head_value": "159",
+      "website_head_label": "Sale of Offered Materials (Gold,Silver Etc) ( Credit )",
+      "direction": "RECEIPT",
+      "account_set": "GENERAL",
+      "validity": "ACTIVE",
+      "notes": ""
+    },
+    {
+      "canonical_head_id": "GEN_HEAD_SALE_OLD_THINGS",
+      "website_head_value": "160",
+      "website_head_label": "Sale of Old Things ( Credit )",
+      "direction": "RECEIPT",
+      "account_set": "GENERAL",
+      "validity": "ACTIVE",
+      "notes": ""
+    },
+    {
+      "canonical_head_id": "GEN_HEAD_SALES_STALL_INC",
+      "website_head_value": "161",
+      "website_head_label": "Sales Stall Income ( Credit )",
+      "direction": "RECEIPT",
+      "account_set": "GENERAL",
+      "validity": "ACTIVE",
+      "notes": ""
+    },
+    {
+      "canonical_head_id": "GEN_HEAD_SCHOOL_INST_INC",
+      "website_head_value": "162",
+      "website_head_label": "School/Other Institutions Income ( Credit )",
+      "direction": "RECEIPT",
+      "account_set": "GENERAL",
+      "validity": "ACTIVE",
+      "notes": ""
+    },
+    {
+      "canonical_head_id": "GEN_HEAD_SUNDAY_COLLECTION_INC",
+      "website_head_value": "164",
+      "website_head_label": "Sunday Collection (Vedapracharam) Income(C) ( Credit )",
+      "direction": "RECEIPT",
+      "account_set": "GENERAL",
+      "validity": "ACTIVE",
+      "notes": ""
+    },
+    {
+      "canonical_head_id": "GEN_HEAD_TOMB_EXP_COLLECTED",
+      "website_head_value": "165",
+      "website_head_label": "Tomb Expense Collected(C) ( Credit )",
+      "direction": "RECEIPT",
+      "account_set": "GENERAL",
+      "validity": "ACTIVE",
+      "notes": ""
+    },
+    {
+      "canonical_head_id": "GEN_HEAD_TOMB_FEES_COLLECTED",
+      "website_head_value": "166",
+      "website_head_label": "Tomb-Fees-Collected(C) ( Credit )",
+      "direction": "RECEIPT",
+      "account_set": "GENERAL",
+      "validity": "ACTIVE",
+      "notes": ""
+    },
+    {
+      "canonical_head_id": "GEN_HEAD_MISC_INCOME",
+      "website_head_value": "152",
+      "website_head_label": "Miscellaneous Income(C) ( Credit )",
+      "direction": "RECEIPT",
+      "account_set": "GENERAL",
+      "validity": "ACTIVE",
+      "notes": ""
+    },
+    {
+      "canonical_head_id": "GEN_HEAD_ADV_TO_AGRI",
+      "website_head_value": "109",
+      "website_head_label": "Advance to Agriculture Account ( Debit )",
+      "direction": "PAYMENT",
+      "account_set": "GENERAL",
+      "validity": "ACTIVE",
+      "notes": ""
+    },
+    {
+      "canonical_head_id": "GEN_HEAD_ALLOWANCES",
+      "website_head_value": "108",
+      "website_head_label": "Allowances ( Debit )",
+      "direction": "PAYMENT",
+      "account_set": "GENERAL",
+      "validity": "ACTIVE",
+      "notes": "Requires subhead"
+    },
+    {
+      "canonical_head_id": "GEN_HEAD_BANK_CHARGES",
+      "website_head_value": "106",
+      "website_head_label": "Bank Charges ( Debit )",
+      "direction": "PAYMENT",
+      "account_set": "GENERAL",
+      "validity": "ACTIVE",
+      "notes": ""
+    },
+    {
+      "canonical_head_id": "GEN_HEAD_CATHEDRATICUM",
+      "website_head_value": "110",
+      "website_head_label": "Cathedraticum Fees to the Diocese(D) ( Debit )",
+      "direction": "PAYMENT",
+      "account_set": "GENERAL",
+      "validity": "ACTIVE",
+      "notes": ""
+    },
+    {
+      "canonical_head_id": "GEN_HEAD_CHURCH_ARTICLES_VEST",
+      "website_head_value": "111",
+      "website_head_label": "Church Articles & Vestments ( Debit )",
+      "direction": "PAYMENT",
+      "account_set": "GENERAL",
+      "validity": "ACTIVE",
+      "notes": ""
+    },
+    {
+      "canonical_head_id": "GEN_HEAD_FEAST_EXPENSES",
+      "website_head_value": "112",
+      "website_head_label": "Church Feast - Expenses ( Debit )",
+      "direction": "PAYMENT",
+      "account_set": "GENERAL",
+      "validity": "ACTIVE",
+      "notes": ""
+    },
+    {
+      "canonical_head_id": "GEN_HEAD_COLLECTIONS_PAID_DIOCESE",
+      "website_head_value": "113",
+      "website_head_label": "Collections Paid to the the Diocese ( Debit )",
+      "direction": "PAYMENT",
+      "account_set": "GENERAL",
+      "validity": "ACTIVE",
+      "notes": ""
+    },
+    {
+      "canonical_head_id": "GEN_HEAD_DEFAULT_FEE_PAID",
+      "website_head_value": "144",
+      "website_head_label": "Default Fee Paid(D) ( Debit )",
+      "direction": "PAYMENT",
+      "account_set": "GENERAL",
+      "validity": "ACTIVE",
+      "notes": ""
+    },
+    {
+      "canonical_head_id": "GEN_HEAD_DONATION_DIOCESE_DISB",
+      "website_head_value": "115",
+      "website_head_label": "Donation from the Diocese Disbursed ( Debit )",
+      "direction": "PAYMENT",
+      "account_set": "GENERAL",
+      "validity": "ACTIVE",
+      "notes": ""
+    },
+    {
+      "canonical_head_id": "GEN_HEAD_ELECTRICITY",
+      "website_head_value": "116",
+      "website_head_label": "Electricity Charges ( Debit )",
+      "direction": "PAYMENT",
+      "account_set": "GENERAL",
+      "validity": "ACTIVE",
+      "notes": ""
+    },
+    {
+      "canonical_head_id": "GEN_HEAD_FURNITURE",
+      "website_head_value": "118",
+      "website_head_label": "Furniture ( Debit )",
+      "direction": "PAYMENT",
+      "account_set": "GENERAL",
+      "validity": "ACTIVE",
+      "notes": ""
+    },
+    {
+      "canonical_head_id": "GEN_HEAD_LEGAL_AUDIT",
+      "website_head_value": "121",
+      "website_head_label": "Legal & Audit Fees ( Debit )",
+      "direction": "PAYMENT",
+      "account_set": "GENERAL",
+      "validity": "ACTIVE",
+      "notes": ""
+    },
+    {
+      "canonical_head_id": "GEN_HEAD_LICENSE_TAX",
+      "website_head_value": "122",
+      "website_head_label": "License & Tax ( Debit )",
+      "direction": "PAYMENT",
+      "account_set": "GENERAL",
+      "validity": "ACTIVE",
+      "notes": ""
+    },
+    {
+      "canonical_head_id": "GEN_HEAD_MACHINERY_EQUIP",
+      "website_head_value": "124",
+      "website_head_label": "Machinery & Equipments ( Debit )",
+      "direction": "PAYMENT",
+      "account_set": "GENERAL",
+      "validity": "ACTIVE",
+      "notes": ""
+    },
+    {
+      "canonical_head_id": "GEN_HEAD_REPAIR_MAINTENANCE",
+      "website_head_value": "125",
+      "website_head_label": "Repair & Maintenance ( Debit )",
+      "direction": "PAYMENT",
+      "account_set": "GENERAL",
+      "validity": "ACTIVE",
+      "notes": ""
+    },
+    {
+      "canonical_head_id": "GEN_HEAD_MISC_EXPENSES",
+      "website_head_value": "126",
+      "website_head_label": "Miscellaneous Expenses ( Debit )",
+      "direction": "PAYMENT",
+      "account_set": "GENERAL",
+      "validity": "ACTIVE",
+      "notes": ""
+    },
+    {
+      "canonical_head_id": "GEN_HEAD_NEW_CONSTRUCTION",
+      "website_head_value": "127",
+      "website_head_label": "New Construction ( Debit )",
+      "direction": "PAYMENT",
+      "account_set": "GENERAL",
+      "validity": "ACTIVE",
+      "notes": ""
+    },
+    {
+      "canonical_head_id": "GEN_HEAD_PASSARAM_SHARE",
+      "website_head_value": "129",
+      "website_head_label": "Passaram Share to ADCP/Accountant/Sacristian ( Debit )",
+      "direction": "PAYMENT",
+      "account_set": "GENERAL",
+      "validity": "ACTIVE",
+      "notes": ""
+    },
+    {
+      "canonical_head_id": "GEN_HEAD_TELEPHONE_POSTAGE",
+      "website_head_value": "130",
+      "website_head_label": "Telephone & Postage ( Debit )",
+      "direction": "PAYMENT",
+      "account_set": "GENERAL",
+      "validity": "ACTIVE",
+      "notes": ""
+    },
+    {
+      "canonical_head_id": "GEN_HEAD_PRINTING_STATIONERY",
+      "website_head_value": "131",
+      "website_head_label": "Printing & Stationary ( Debit )",
+      "direction": "PAYMENT",
+      "account_set": "GENERAL",
+      "validity": "ACTIVE",
+      "notes": ""
+    },
+    {
+      "canonical_head_id": "GEN_HEAD_RENTED_BLDG_EXP",
+      "website_head_value": "132",
+      "website_head_label": "Rented Building Expense ( Debit )",
+      "direction": "PAYMENT",
+      "account_set": "GENERAL",
+      "validity": "ACTIVE",
+      "notes": ""
+    },
+    {
+      "canonical_head_id": "GEN_HEAD_RENT_SECURITY",
+      "website_head_value": "157",
+      "website_head_label": "Rent Security Received & Refund ( Credit )",
+      "direction": "PAYMENT",
+      "account_set": "GENERAL",
+      "validity": "ACTIVE",
+      "notes": "Contra/refund"
+    },
+    {
+      "canonical_head_id": "GEN_HEAD_SCHOOL_INST_EXP",
+      "website_head_value": "134",
+      "website_head_label": "School/Other Institutions Expenses ( Debit )",
+      "direction": "PAYMENT",
+      "account_set": "GENERAL",
+      "validity": "ACTIVE",
+      "notes": ""
+    },
+    {
+      "canonical_head_id": "GEN_HEAD_SOCIAL_WORK_CHARITY",
+      "website_head_value": "9805",
+      "website_head_label": "Social Work and Charity (Annual) ( Debit )",
+      "direction": "PAYMENT",
+      "account_set": "GENERAL",
+      "validity": "ACTIVE",
+      "notes": ""
+    },
+    {
+      "canonical_head_id": "GEN_HEAD_SUNDAY_COLL_DIOCESE",
+      "website_head_value": "136",
+      "website_head_label": "Sunday Collection (Vedapracharam)to the Diocese(D) ( Debit )",
+      "direction": "PAYMENT",
+      "account_set": "GENERAL",
+      "validity": "ACTIVE",
+      "notes": ""
+    },
+    {
+      "canonical_head_id": "GEN_HEAD_SUNDAY_SCHOOL_EXP",
+      "website_head_value": "137",
+      "website_head_label": "Sunday School Expense ( Debit )",
+      "direction": "PAYMENT",
+      "account_set": "GENERAL",
+      "validity": "ACTIVE",
+      "notes": ""
+    },
+    {
+      "canonical_head_id": "GEN_HEAD_TRAVELLING_EXP",
+      "website_head_value": "138",
+      "website_head_label": "Travelling Expense ( Debit )",
+      "direction": "PAYMENT",
+      "account_set": "GENERAL",
+      "validity": "ACTIVE",
+      "notes": ""
+    },
+    {
+      "canonical_head_id": "GEN_HEAD_WINE_CANDLE_HOST",
+      "website_head_value": "139",
+      "website_head_label": "Wine,Candle, Host, ,Incense Etc. ( Debit )",
+      "direction": "PAYMENT",
+      "account_set": "GENERAL",
+      "validity": "ACTIVE",
+      "notes": ""
+    },
+    {
+      "canonical_head_id": "GEN_HEAD_ADCP_NCF_PWF",
+      "website_head_value": "7075",
+      "website_head_label": "A D C P ( Debit )",
+      "direction": "PAYMENT",
+      "account_set": "GENERAL",
+      "validity": "ACTIVE",
+      "notes": "ADCP/NCF/PWF"
+    },
+    {
+      "canonical_head_id": "GEN_HEAD_BANK_SIB_KAPPAD",
+      "website_head_value": "4949",
+      "website_head_label": "The South Indian Bank Kappad ( Debit )",
+      "direction": "RECEIPT",
+      "account_set": "GENERAL",
+      "validity": "ACTIVE",
+      "notes": "Bank withdrawal contra"
+    },
+    {
+      "canonical_head_id": "GEN_HEAD_BANK_SIB_KAPPAD",
+      "website_head_value": "4949",
+      "website_head_label": "The South Indian Bank Kappad ( Debit )",
+      "direction": "PAYMENT",
+      "account_set": "GENERAL",
+      "validity": "ACTIVE",
+      "notes": "Bank deposit contra"
+    },
+    {
+      "canonical_head_id": "GEN_HEAD_BANK_MEENACHIL_EAST",
+      "website_head_value": "4948",
+      "website_head_label": "Meenachil East urban cooperative bank ( Debit )",
+      "direction": "RECEIPT",
+      "account_set": "GENERAL",
+      "validity": "ACTIVE",
+      "notes": "Bank withdrawal contra"
+    },
+    {
+      "canonical_head_id": "GEN_HEAD_BANK_MEENACHIL_EAST",
+      "website_head_value": "4948",
+      "website_head_label": "Meenachil East urban cooperative bank ( Debit )",
+      "direction": "PAYMENT",
+      "account_set": "GENERAL",
+      "validity": "ACTIVE",
+      "notes": "Bank deposit contra"
+    },
+    {
+      "canonical_head_id": "GEN_HEAD_BANK_SIB_PALA",
+      "website_head_value": "4950",
+      "website_head_label": "The South Indian Bank Pala ( Debit )",
+      "direction": "RECEIPT",
+      "account_set": "GENERAL",
+      "validity": "ACTIVE",
+      "notes": "Bank withdrawal contra"
+    },
+    {
+      "canonical_head_id": "GEN_HEAD_BANK_SIB_PALA",
+      "website_head_value": "4950",
+      "website_head_label": "The South Indian Bank Pala ( Debit )",
+      "direction": "PAYMENT",
+      "account_set": "GENERAL",
+      "validity": "ACTIVE",
+      "notes": "Bank deposit contra"
+    },
+    {
+      "canonical_head_id": "GEN_HEAD_BANK_SBI",
+      "website_head_value": "4951",
+      "website_head_label": "State Bank of India ( Debit )",
+      "direction": "RECEIPT",
+      "account_set": "GENERAL",
+      "validity": "ACTIVE",
+      "notes": "Bank withdrawal contra"
+    },
+    {
+      "canonical_head_id": "GEN_HEAD_BANK_SBI",
+      "website_head_value": "4951",
+      "website_head_label": "State Bank of India ( Debit )",
+      "direction": "PAYMENT",
+      "account_set": "GENERAL",
+      "validity": "ACTIVE",
+      "notes": "Bank deposit contra"
+    },
+    {
+      "canonical_head_id": "GEN_HEAD_BANK_THIDANAD",
+      "website_head_value": "4946",
+      "website_head_label": "The Thidanad Co. Operative Bank 1 ( Credit )",
+      "direction": "RECEIPT",
+      "account_set": "GENERAL",
+      "validity": "ACTIVE",
+      "notes": "Bank withdrawal contra"
+    },
+    {
+      "canonical_head_id": "GEN_HEAD_BANK_THIDANAD",
+      "website_head_value": "4946",
+      "website_head_label": "The Thidanad Co. Operative Bank 1 ( Credit )",
+      "direction": "PAYMENT",
+      "account_set": "GENERAL",
+      "validity": "ACTIVE",
+      "notes": "Bank deposit contra"
+    },
+    {
+      "canonical_head_id": "GEN_HEAD_BANK_KOTTAYAM_DIST",
+      "website_head_value": "4947",
+      "website_head_label": "Kottayam District Co-operative Bank ( Credit )",
+      "direction": "RECEIPT",
+      "account_set": "GENERAL",
+      "validity": "ACTIVE",
+      "notes": "Bank withdrawal contra"
+    },
+    {
+      "canonical_head_id": "GEN_HEAD_BANK_KOTTAYAM_DIST",
+      "website_head_value": "4947",
+      "website_head_label": "Kottayam District Co-operative Bank ( Credit )",
+      "direction": "PAYMENT",
+      "account_set": "GENERAL",
+      "validity": "ACTIVE",
+      "notes": "Bank deposit contra"
+    }
+  ],
+  "website_subheads": [
+    {
+      "canonical_subhead_id": "GEN_SUB_ALLOW_VICAR",
+      "parent_website_head_value": "108",
+      "website_subhead_value": "338",
+      "website_subhead_label": "Rev. Fr. Vicar",
+      "validity": "ACTIVE"
+    },
+    {
+      "canonical_subhead_id": "GEN_SUB_ALLOW_ASST",
+      "parent_website_head_value": "108",
+      "website_subhead_value": "339",
+      "website_subhead_label": "Rev. Fr. Asst",
+      "validity": "ACTIVE"
+    },
+    {
+      "canonical_subhead_id": "GEN_SUB_ALLOW_ACCT",
+      "parent_website_head_value": "108",
+      "website_subhead_value": "340",
+      "website_subhead_label": "Accountant",
+      "validity": "ACTIVE"
+    },
+    {
+      "canonical_subhead_id": "GEN_SUB_ALLOW_COMP",
+      "parent_website_head_value": "108",
+      "website_subhead_value": "341",
+      "website_subhead_label": "Computer Assistant",
+      "validity": "ACTIVE"
+    },
+    {
+      "canonical_subhead_id": "GEN_SUB_ALLOW_SACR",
+      "parent_website_head_value": "108",
+      "website_subhead_value": "342",
+      "website_subhead_label": "Sacristian",
+      "validity": "ACTIVE"
+    },
+    {
+      "canonical_subhead_id": "GEN_SUB_ALLOW_SWEEP",
+      "parent_website_head_value": "108",
+      "website_subhead_value": "343",
+      "website_subhead_label": "Sweeper",
+      "validity": "ACTIVE"
+    },
+    {
+      "canonical_subhead_id": "GEN_SUB_DIOCESE_CHILDHOOD",
+      "parent_website_head_value": "143",
+      "website_subhead_value": "453",
+      "website_subhead_label": "Holy Childhood",
+      "validity": "ACTIVE"
+    },
+    {
+      "canonical_subhead_id": "GEN_SUB_DIOCESE_HOLY_LAND",
+      "parent_website_head_value": "143",
+      "website_subhead_value": "454",
+      "website_subhead_label": "Holy Land",
+      "validity": "ACTIVE"
+    },
+    {
+      "canonical_subhead_id": "GEN_SUB_DIOCESE_HUNGER",
+      "parent_website_head_value": "143",
+      "website_subhead_value": "455",
+      "website_subhead_label": "Hunger & Disease",
+      "validity": "ACTIVE"
+    },
+    {
+      "canonical_subhead_id": "GEN_SUB_DIOCESE_JUSTICE",
+      "parent_website_head_value": "143",
+      "website_subhead_value": "456",
+      "website_subhead_label": "Justice Sunday",
+      "validity": "ACTIVE"
+    },
+    {
+      "canonical_subhead_id": "GEN_SUB_DIOCESE_KCYM",
+      "parent_website_head_value": "143",
+      "website_subhead_value": "457",
+      "website_subhead_label": "K.C.Y.M.",
+      "validity": "ACTIVE"
+    },
+    {
+      "canonical_subhead_id": "GEN_SUB_DIOCESE_MASS_MEDIA",
+      "parent_website_head_value": "143",
+      "website_subhead_value": "458",
+      "website_subhead_label": "Mass Media",
+      "validity": "ACTIVE"
+    },
+    {
+      "canonical_subhead_id": "GEN_SUB_DIOCESE_MISSION_SUN",
+      "parent_website_head_value": "143",
+      "website_subhead_value": "459",
+      "website_subhead_label": "Mission Sunday",
+      "validity": "ACTIVE"
+    },
+    {
+      "canonical_subhead_id": "GEN_SUB_DIOCESE_SYRO_MALABAR",
+      "parent_website_head_value": "143",
+      "website_subhead_value": "460",
+      "website_subhead_label": "Mission Syro Malabar (Preshithavaram)",
+      "validity": "ACTIVE"
+    },
+    {
+      "canonical_subhead_id": "GEN_SUB_DIOCESE_PETERS_PENCE",
+      "parent_website_head_value": "143",
+      "website_subhead_value": "461",
+      "website_subhead_label": "Peter's Pence",
+      "validity": "ACTIVE"
+    },
+    {
+      "canonical_subhead_id": "GEN_SUB_DIOCESE_SABHA_DINAM",
+      "parent_website_head_value": "143",
+      "website_subhead_value": "462",
+      "website_subhead_label": "Sabha Dinam",
+      "validity": "ACTIVE"
+    },
+    {
+      "canonical_subhead_id": "GEN_SUB_DIOCESE_JESUS_FRAT",
+      "parent_website_head_value": "143",
+      "website_subhead_value": "463",
+      "website_subhead_label": "Jesus Fraternity",
+      "validity": "ACTIVE"
+    },
+    {
+      "canonical_subhead_id": "GEN_SUB_DIOCESE_MADHYA_VIRUTHA",
+      "parent_website_head_value": "143",
+      "website_subhead_value": "464",
+      "website_subhead_label": "Madhya Virutha Dinam",
+      "validity": "ACTIVE"
+    },
+    {
+      "canonical_subhead_id": "GEN_SUB_DIOCESE_FAMILY_APOST",
+      "parent_website_head_value": "143",
+      "website_subhead_value": "465",
+      "website_subhead_label": "Family Apostolate",
+      "validity": "ACTIVE"
+    },
+    {
+      "canonical_subhead_id": "GEN_SUB_DIOCESE_CARITAS",
+      "parent_website_head_value": "143",
+      "website_subhead_value": "466",
+      "website_subhead_label": "Pala Caritas",
+      "validity": "ACTIVE"
+    },
+    {
+      "canonical_subhead_id": "GEN_SUB_DIOCESE_SEMINARIAN",
+      "parent_website_head_value": "143",
+      "website_subhead_value": "467",
+      "website_subhead_label": "Seminarian's Aid Fund",
+      "validity": "ACTIVE"
+    },
+    {
+      "canonical_subhead_id": "GEN_SUB_DIOCESE_AKCC",
+      "parent_website_head_value": "143",
+      "website_subhead_value": "468",
+      "website_subhead_label": "A.K.C.C. Fund",
+      "validity": "ACTIVE"
+    },
+    {
+      "canonical_subhead_id": "GEN_SUB_DIOCESE_BIBLE_SUN",
+      "parent_website_head_value": "143",
+      "website_subhead_value": "546",
+      "website_subhead_label": "Bible Sunday",
+      "validity": "ACTIVE"
+    },
+    {
+      "canonical_subhead_id": "GEN_SUB_DIOCESE_SABARMATI",
+      "parent_website_head_value": "143",
+      "website_subhead_value": "7180",
+      "website_subhead_label": "Mission Sabarmati",
+      "validity": "ACTIVE"
+    },
+    {
+      "canonical_subhead_id": "GEN_SUB_DIOCESE_OTHER",
+      "parent_website_head_value": "143",
+      "website_subhead_value": "7350",
+      "website_subhead_label": "Other",
+      "validity": "ACTIVE"
+    }
+  ]
+}

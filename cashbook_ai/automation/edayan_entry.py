@@ -69,6 +69,80 @@ class BrowserEntryAdapter(Protocol):
         """Return fresh post-submit DOM/URL evidence confirming persistence."""
 
 
+class MockBrowserEntryAdapter:
+    """Mock adapter simulating browser interactions without network/DOM access."""
+
+    def __init__(
+        self,
+        *,
+        readback_override: Mapping[str, Any] | None = None,
+        table_text_override: str | None = None,
+        save_confirmed: bool = True,
+        save_error: str | None = None,
+        fail_submit: bool = False,
+    ):
+        self.readback_override = readback_override
+        self.table_text_override = table_text_override
+        self.save_confirmed = save_confirmed
+        self.save_error = save_error
+        self.fail_submit = fail_submit
+        self.entered_entries: list[dict[str, Any]] = []
+        self.submitted_count = 0
+        self.current_entry: dict[str, Any] | None = None
+
+    def enter(self, entry: Mapping[str, Any]) -> Mapping[str, Any]:
+        self.current_entry = dict(entry)
+        self.entered_entries.append(dict(entry))
+        return self.readback(entry)
+
+    def readback(self, entry: Mapping[str, Any] | None = None) -> Mapping[str, Any]:
+        target = dict(entry or self.current_entry or {})
+        if self.readback_override is not None:
+            res = dict(self.readback_override)
+            if "table_text" not in res:
+                res["table_text"] = self.table_text_override or ""
+            return res
+
+        date_val = str(target.get("date", "2026-05-01"))
+        if len(date_val) == 10 and date_val[4] == "-" and date_val[7] == "-":
+            date_val = f"{date_val[8:10]}-{date_val[5:7]}-{date_val[0:4]}"
+
+        return {
+            "date": date_val,
+            "receipt_number": str(target.get("receipt_number", "1")),
+            "amount": str(target.get("amount", "1000")),
+            "mode_cash": True,
+            "head": target.get("head_name", "Test Head"),
+            "subhead": target.get("subhead", ""),
+            "narration": str(target.get("narration", "")),
+            "table_text": self.table_text_override or "",
+            "dom": {},
+        }
+
+    def submit(self) -> Mapping[str, Any]:
+        if self.fail_submit:
+            raise RuntimeError("Browser submit error")
+        self.submitted_count += 1
+        return {"clicked": True}
+
+    def observe_save(
+        self, expected_entry: Mapping[str, Any] | None = None, timeout_seconds: float = 30
+    ) -> Mapping[str, Any]:
+        v_num = str((expected_entry or {}).get("receipt_number", "1"))
+        if not self.save_confirmed:
+            return {
+                "confirmed": False,
+                "record_id": None,
+                "last_error": self.save_error or "Timeout waiting for table evidence",
+            }
+        return {
+            "confirmed": True,
+            "record_id": v_num,
+            "success_text": f"Saved voucher {v_num}",
+            "table_evidence": True,
+        }
+
+
 class RelayBrowserClient:
     """Minimal client for the already-installed Copilot Browser relay."""
 
@@ -1089,6 +1163,26 @@ def _find_incident_file(incident_dir: Path, incident_id: str) -> tuple[Path | No
 
     if incident_dir.is_dir():
         for f in incident_dir.glob("batch_incident_*.json"):
+            try:
+                with f.open("r", encoding="utf-8") as handle:
+                    data = json.load(handle)
+                if data.get("incident_id") == incident_id:
+                    return f, data
+            except Exception:
+                pass
+
+    # Search archived incident directories across data/archive
+    archive_root = Path("data/archive")
+    if archive_root.is_dir():
+        for f in archive_root.rglob("batch_incident_*.json"):
+            try:
+                with f.open("r", encoding="utf-8") as handle:
+                    data = json.load(handle)
+                if data.get("incident_id") == incident_id:
+                    return f, data
+            except Exception:
+                pass
+        for f in archive_root.rglob(f"batch_{incident_id}.json"):
             try:
                 with f.open("r", encoding="utf-8") as handle:
                     data = json.load(handle)

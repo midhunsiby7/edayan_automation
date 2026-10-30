@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cashbook AI - Parish Accounting Assistant</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Top Navigation Header -->
+  <header class="app-header">
+    <div class="header-left">
+      <div class="logo">
+        <span class="logo-icon">📊</span>
+        <span class="logo-text">Cashbook <strong>AI</strong></span>
+      </div>
+      <div class="month-selector-wrapper">
+        <label for="monthSelect">Period:</label>
+        <select id="monthSelect" class="form-select"></select>
+        <button id="btnNewMonth" class="btn btn-outline btn-sm">+ New Month</button>
+      </div>
+    </div>
+
+    <div class="header-right">
+      <div class="status-pill" id="relayStatusPill" title="Local browser relay server for e-Dayan">
+        <span class="dot dot-standby" id="relayDot"></span>
+        <span id="relayText">Relay: Connecting...</span>
+      </div>
+      <div class="status-pill" id="modelStatusPill" title="Local Qwen3.5-4B GGUF Model">
+        <span class="dot dot-ready" id="modelDot"></span>
+        <span id="modelText">Qwen3.5-4B: Ready</span>
+      </div>
+      <div class="status-pill host-pill">
+        <span class="host-text">🔒 127.0.0.1:8000</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Navigation Tabs -->
+  <nav class="nav-tabs-bar">
+    <button class="nav-tab active" data-tab="dashboard">Dashboard</button>
+    <button class="nav-tab" data-tab="upload">Upload & Arrange</button>
+    <button class="nav-tab" data-tab="processing">Live Processing</button>
+    <button class="nav-tab" data-tab="review">Review Intelligence</button>
+    <button class="nav-tab" data-tab="intake">Approved Workbook & Live Execution</button>
+    <button class="nav-tab" data-tab="logs">Technical Logs</button>
+  </nav>
+
+  <!-- Main Container -->
+  <main class="app-container">
+
+    <!-- TAB 1: DASHBOARD -->
+    <section id="view-dashboard" class="tab-view active">
+      <div class="view-header">
+        <h2>Accounting Dashboard</h2>
+        <p class="subtitle">Autonomous physical cashbook digestion and intelligent classification for e-Dayan.</p>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-title">Active Accounting Period</div>
+          <div class="stat-value" id="dashActiveMonth">2026-05</div>
+          <div class="stat-sub" id="dashMonthStatus">In Progress</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-title">Ingested Cashbook Pages</div>
+          <div class="stat-value" id="dashPageCount">3</div>
+          <div class="stat-sub">Physical pages in workspace</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-title">Resolved Mappings</div>
+          <div class="stat-value text-success" id="dashResolvedCount">--</div>
+          <div class="stat-sub" id="dashMappingSub">Run processing to calculate</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-title">Review Queue</div>
+          <div class="stat-value text-warning" id="dashPendingReviewCount">--</div>
+          <div class="stat-sub">Pending human sign-off</div>
+        </div>
+      </div>
+
+      <div class="dashboard-columns">
+        <div class="card col-main">
+          <div class="card-header">
+            <h3>Recent Processing Jobs</h3>
+            <button class="btn btn-sm btn-outline" id="btnRefreshJobs">Refresh</button>
+          </div>
+          <div class="card-body">
+            <table class="data-table" id="jobsTable">
+              <thead>
+                <tr>
+                  <th>Job ID</th>
+                  <th>Month</th>
+                  <th>Status</th>
+                  <th>Current Stage</th>
+                  <th>Created</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="jobsTableBody">
+                <tr><td colspan="6" class="text-muted">Loading jobs...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card col-side">
+          <div class="card-header">
+            <h3>Previous Period Handoff</h3>
+          </div>
+          <div class="card-body">
+            <div class="handoff-box">
+              <div class="handoff-badge verified">April 2026 COMPLETED & ARCHIVED</div>
+              <ul class="handoff-list">
+                <li><strong>Total Transactions:</strong> 52 / 52 confirmed</li>
+                <li><strong>Receipts:</strong> 20 confirmed</li>
+                <li><strong>Payments:</strong> 32 confirmed</li>
+                <li><strong>Closing Balance:</strong> ₹18,506.60</li>
+                <li><strong>Variance:</strong> ₹0.00 (Reconciled)</li>
+                <li><strong>May Opening Target:</strong> ₹18,506.60</li>
+              </ul>
+              <div class="handoff-note">
+                April records are safely archived in <code>data/archive/2026-04/</code>.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: UPLOAD & ARRANGE -->
+    <section id="view-upload" class="tab-view">
+      <div class="view-header flex-between">
+        <div>
+          <h2>Cashbook Image Upload & Arrangement</h2>
+          <p class="subtitle">Upload cashbook photographs, verify chronological order, and assign logical page numbers.</p>
+        </div>
+        <div>
+          <button id="btnStartProcessing" class="btn btn-primary btn-lg">CONFIRM PAGES & START PROCESSING ➔</button>
+        </div>
+      </div>
+
+      <!-- Drag & Drop Zone -->
+      <div class="upload-dropzone" id="dropzone">
+        <div class="dropzone-content">
+          <div class="drop-icon">📁</div>
+          <div class="drop-title">Drag & Drop Cashbook Photographs Here</div>
+          <div class="drop-desc">Supports JPG, JPEG, and PNG. Multi-file upload supported.</div>
+          <div class="drop-actions">
+            <label class="btn btn-secondary">
+              Select Images
+              <input type="file" id="fileInput" multiple accept="image/jpeg,image/png,image/jpg" style="display: none;">
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Thumbnails Preview & Ordering Grid -->
+      <div class="pages-section">
+        <div class="section-header flex-between">
+          <h3>Logical Page Sequence (<span id="pageCountBadge">0</span> pages)</h3>
+          <div class="page-controls-help text-muted">
+            Drag cards or use arrow buttons to arrange pages in chronological order (001, 002...).
+          </div>
+        </div>
+
+        <div class="pages-grid" id="pagesGrid">
+          <div class="empty-state">No images uploaded for this period yet.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: LIVE PROCESSING -->
+    <section id="view-processing" class="tab-view">
+      <div class="view-header flex-between">
+        <div>
+          <h2>Processing Orchestration</h2>
+          <p class="subtitle">Background execution through extraction, alignment, hybrid mapping, and review preparation.</p>
+        </div>
+        <div>
+          <button id="btnCancelJob" class="btn btn-danger btn-sm" style="display: none;">Cancel Processing</button>
+        </div>
+      </div>
+
+      <div class="job-meta-bar" id="jobMetaBar" style="display: none;">
+        <div><strong>Job ID:</strong> <span id="activeJobId">--</span></div>
+        <div><strong>Month:</strong> <span id="activeJobMonth">--</span></div>
+        <div><strong>Status:</strong> <span class="badge" id="activeJobStatus">PENDING</span></div>
+        <div id="jobActionLinks" style="display: none;">
+          <button class="btn btn-sm btn-success" id="btnGoToReview">Proceed to Review Intelligence ➔</button>
+          <a class="btn btn-sm btn-outline" id="btnDownloadDraftExcel" href="#" target="_blank">Download Draft Excel</a>
+        </div>
+      </div>
+
+      <!-- Live Stage Stepper -->
+      <div class="stages-stepper" id="stagesStepper">
+        <div class="stage-step" data-stage="source_ingestion">
+          <div class="stage-indicator">1</div>
+          <div class="stage-info">
+            <div class="stage-name">Source Ingestion</div>
+            <div class="stage-detail">Validates image files, dimensions, and computes SHA-256 hashes.</div>
+          </div>
+          <div class="stage-status-badge">PENDING</div>
+        </div>
+
+        <div class="stage-step" data-stage="page_validation">
+          <div class="stage-indicator">2</div>
+          <div class="stage-info">
+            <div class="stage-name">Page Validation</div>
+            <div class="stage-detail">Validates page order continuity and duplicate prevention.</div>
+          </div>
+          <div class="stage-status-badge">PENDING</div>
+        </div>
+
+        <div class="stage-step" data-stage="ocr_extraction">
+          <div class="stage-indicator">3</div>
+          <div class="stage-info">
+            <div class="stage-name">OCR Extraction</div>
+            <div class="stage-detail">Extracts raw Malayalam/English transaction rows.</div>
+          </div>
+          <div class="stage-status-badge">PENDING</div>
+        </div>
+
+        <div class="stage-step" data-stage="column_alignment">
+          <div class="stage-indicator">4</div>
+          <div class="stage-info">
+            <div class="stage-name">Column Alignment</div>
+            <div class="stage-detail">Detects and corrects folio/voucher column transpositions.</div>
+          </div>
+          <div class="stage-status-badge">PENDING</div>
+        </div>
+
+        <div class="stage-step" data-stage="accounting_mapping">
+          <div class="stage-indicator">5</div>
+          <div class="stage-info">
+            <div class="stage-name">Accounting Mapping (Levels 1–3)</div>
+            <div class="stage-detail">Resolves canonical heads using exact folios, aliases, and contextual rules.</div>
+          </div>
+          <div class="stage-status-badge">PENDING</div>
+        </div>
+
+        <div class="stage-step" data-stage="subhead_validation">
+          <div class="stage-indicator">6</div>
+          <div class="stage-info">
+            <div class="stage-name">Subhead Policy Validation</div>
+            <div class="stage-detail">Enforces mandatory, optional, and prohibited subhead policies.</div>
+          </div>
+          <div class="stage-status-badge">PENDING</div>
+        </div>
+
+        <div class="stage-step" data-stage="llm_assistance">
+          <div class="stage-indicator">7</div>
+          <div class="stage-info">
+            <div class="stage-name">LLM Assistance (Level 4)</div>
+            <div class="stage-detail">Constrained Qwen3.5-4B inference on GPU with automatic teardown.</div>
+          </div>
+          <div class="stage-status-badge">PENDING</div>
+        </div>
+
+        <div class="stage-step" data-stage="review_preparation">
+          <div class="stage-indicator">8</div>
+          <div class="stage-info">
+            <div class="stage-name">Review Preparation</div>
+            <div class="stage-detail">Clusters identical/similar narrations into review groups.</div>
+          </div>
+          <div class="stage-status-badge">PENDING</div>
+        </div>
+
+        <div class="stage-step" data-stage="draft_workbook_generation">
+          <div class="stage-indicator">9</div>
+          <div class="stage-info">
+            <div class="stage-name">Draft Workbook Generation</div>
+            <div class="stage-detail">Exports standardized 2-sheet review workbook (.xlsx).</div>
+          </div>
+          <div class="stage-status-badge">PENDING</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 4: REVIEW INTELLIGENCE -->
+    <section id="view-review" class="tab-view">
+      <div class="view-header flex-between">
+        <div>
+          <h2>Review Intelligence & Exceptions</h2>
+          <p class="subtitle">Audit suggested classifications, resolve ambiguities, and confirm transactions.</p>
+        </div>
+        <div class="review-actions-header">
+          <button id="btnExportDraftExcel" class="btn btn-outline btn-sm">Refresh Draft Excel</button>
+          <a id="btnDownloadDraftExcelFromReview" href="#" class="btn btn-primary btn-sm" target="_blank">Download Draft Review Workbook (.xlsx)</a>
+        </div>
+      </div>
+
+      <!-- Review Summary Metrics & Segmented Direction Filter -->
+      <div class="review-summary-bar flex-between">
+        <div class="filter-pills">
+          <button class="filter-pill active" data-filter="all">All (<span id="cntAll">0</span>)</button>
+          <button class="filter-pill" data-filter="needs_review">Needs Review (<span id="cntNeedsReview">0</span>)</button>
+          <button class="filter-pill" data-filter="groups">Grouped Clusters (<span id="cntGroups">0</span>)</button>
+          <button class="filter-pill" data-filter="verified">Verified (<span id="cntVerified">0</span>)</button>
+        </div>
+        <div class="dir-filter-wrapper">
+          <div class="segmented-control" id="dirFilterControl">
+            <button class="segment-btn active" data-dir="ALL">ALL</button>
+            <button class="segment-btn" data-dir="RECEIPT">RECEIPTS</button>
+            <button class="segment-btn" data-dir="PAYMENT">PAYMENTS</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Active Cluster Filter Banner -->
+      <div id="activeGroupBanner" class="active-group-banner" style="display: none;">
+        <div>Filtered by Cluster: <strong id="activeGroupTitle"></strong> (<span id="activeGroupCount">0</span> transactions)</div>
+        <button id="btnClearGroupFilter" class="btn btn-sm btn-outline">Clear Cluster Filter ×</button>
+      </div>
+
+      <!-- Grouped Clustered Section -->
+      <div id="reviewGroupsSection" class="review-groups-container">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <!-- Individual Transactions List -->
+      <div id="reviewItemsSection" class="review-items-container">
+        <!-- Rendered dynamically -->
+      </div>
+    </section>
+
+    <!-- TAB 5: APPROVED WORKBOOK & LIVE EXECUTION -->
+    <section id="view-intake" class="tab-view">
+      <div class="view-header">
+        <h2>Approved Workbook & Autonomous e-Dayan Execution</h2>
+        <p class="subtitle">Validate signed-off review workbook, authorize bounded batch, and monitor guarded automation.</p>
+      </div>
+
+      <div class="notice-box info" id="execNoticeBox">
+        <strong>Execution Guard Notice:</strong>
+        Live execution requires: 1) Verified physical cashbook source, 2) Validated approved workbook, 3) Verified opening balance, and 4) Explicit in-application batch authorization. Bounded execution stops immediately upon any uncertainty.
+      </div>
+
+      <div class="upload-dropzone" id="approvedDropzone">
+        <div class="dropzone-content">
+          <div class="drop-icon">📗</div>
+          <div class="drop-title">Upload Approved Excel Workbook (.xlsx)</div>
+          <div class="drop-desc">Validates Receipts & Payments sheets, 6 required columns, canonical heads, and subhead policies.</div>
+          <div class="drop-actions">
+            <label class="btn btn-primary">
+              Choose Approved Workbook
+              <input type="file" id="approvedFileInput" accept=".xlsx" style="display: none;">
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Preflight Result Card -->
+      <div id="preflightResultCard" class="card preflight-card" style="display: none; margin-bottom: 24px;">
+        <div class="card-header flex-between">
+          <h3>Execution Preflight Summary</h3>
+          <span class="badge" id="preflightStatusBadge">VALIDATION_PASSED</span>
+        </div>
+        <div class="card-body">
+          <div class="preflight-grid">
+            <div class="pf-item">
+              <span class="pf-label">Accounting Month:</span>
+              <strong id="pfMonth">--</strong>
+            </div>
+            <div class="pf-item">
+              <span class="pf-label">Source File:</span>
+              <strong id="pfFileName">--</strong>
+            </div>
+            <div class="pf-item">
+              <span class="pf-label">SHA-256 Fingerprint:</span>
+              <code id="pfHash">--</code>
+            </div>
+            <div class="pf-item">
+              <span class="pf-label">Receipts:</span>
+              <strong id="pfReceipts">0 items (₹0.00)</strong>
+            </div>
+            <div class="pf-item">
+              <span class="pf-label">Payments:</span>
+              <strong id="pfPayments">0 items (₹0.00)</strong>
+            </div>
+            <div class="pf-item">
+              <span class="pf-label">Net Movement:</span>
+              <strong id="pfNet">₹0.00</strong>
+            </div>
+            <div class="pf-item">
+              <span class="pf-label">Opening Cash Target:</span>
+              <strong id="pfOpeningBal">₹18,506.60</strong>
+            </div>
+            <div class="pf-item">
+              <span class="pf-label">Expected Closing Cash:</span>
+              <strong id="pfClosingBal">--</strong>
+            </div>
+            <div class="pf-item">
+              <span class="pf-label">Source Coverage:</span>
+              <strong id="pfCoverage" class="text-success">100.0%</strong>
+            </div>
+            <div class="pf-item">
+              <span class="pf-label">Website Mappings:</span>
+              <strong id="pfWebMappings" class="text-success">COMPLETE</strong>
+            </div>
+          </div>
+
+          <div id="pfErrorsSection" class="pf-alerts" style="display: none;">
+            <div class="alert alert-danger">
+              <h4>Validation Errors Detected (<span id="pfErrorCount">0</span>)</h4>
+              <ul id="pfErrorsList"></ul>
+            </div>
+          </div>
+
+          <div id="pfSuccessSection" class="pf-alerts" style="display: none;">
+            <div class="alert alert-success flex-between">
+              <div>
+                ✓ <strong>All canonical heads, subhead rules, and website mappings verified.</strong> The workbook is cryptographically snapshot and ready for bounded batch execution.
+              </div>
+              <button id="btnAuthorizeBatch" class="btn btn-success btn-lg">AUTHORIZE BATCH & START AUTOMATION ➔</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Execution Telemetry Monitor Card -->
+      <div id="execMonitorCard" class="card" style="display: none; margin-bottom: 24px;">
+        <div class="card-header flex-between">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <h3>Live Automation Runner</h3>
+            <span class="badge" id="execStatusBadge">STANDBY</span>
+          </div>
+          <div class="exec-controls">
+            <button id="btnPauseExec" class="btn btn-outline btn-sm">⏸ Pause</button>
+            <button id="btnResumeExec" class="btn btn-primary btn-sm" style="display: none;">▶ Resume</button>
+            <button id="btnCancelExec" class="btn btn-danger btn-sm">⏹ Cancel</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="exec-meta-grid">
+            <div><strong>Active Batch ID:</strong> <span id="execBatchId">--</span></div>
+            <div><strong>Operator:</strong> <span id="execOperator">Accountant</span></div>
+            <div><strong>Single Owner Lock:</strong> <span class="badge badge-verified" id="execLockBadge">LOCKED</span></div>
+            <div><strong>Progress:</strong> <span id="execProgressText">0 / 0 completed</span></div>
+          </div>
+
+          <!-- Progress Bar -->
+          <div class="progress-bar-container mt-2">
+            <div class="progress-bar-fill" id="execProgressBar" style="width: 0%;"></div>
+          </div>
+
+          <!-- Live Audit Stream -->
+          <div class="live-audit-log mt-2" id="execAuditLog">
+            <code>[IDLE] Ready for bounded execution.</code>
+          </div>
+        </div>
+      </div>
+
+      <!-- Final 9-Point Reconciliation Card -->
+      <div id="reconciliationCard" class="card" style="display: none;">
+        <div class="card-header flex-between">
+          <h3>Final 9-Point Reconciliation Report</h3>
+          <span class="badge badge-verified" id="reconStatusBadge">RECONCILED_COMPLETE</span>
+        </div>
+        <div class="card-body">
+          <div class="preflight-grid">
+            <div class="pf-item">
+              <span class="pf-label">Receipts Verified:</span>
+              <strong id="reconRecStatus">--</strong>
+            </div>
+            <div class="pf-item">
+              <span class="pf-label">Payments Verified:</span>
+              <strong id="reconPayStatus">--</strong>
+            </div>
+            <div class="pf-item">
+              <span class="pf-label">Opening Balance:</span>
+              <strong id="reconOpenBal">₹18,506.60</strong>
+            </div>
+            <div class="pf-item">
+              <span class="pf-label">Closing Balance:</span>
+              <strong id="reconCloseBal">--</strong>
+            </div>
+            <div class="pf-item">
+              <span class="pf-label">Portal Variance:</span>
+              <strong id="reconVariance" class="text-success">₹0.00</strong>
+            </div>
+            <div class="pf-item">
+              <span class="pf-label">Uncertain Submissions:</span>
+              <strong id="reconUncertain" class="text-success">0 (None)</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 6: TECHNICAL LOGS -->
+    <section id="view-logs" class="tab-view">
+      <div class="view-header flex-between">
+        <div>
+          <h2>Technical Diagnostics & Logs</h2>
+          <p class="subtitle">Real-time system telemetry, hardware memory headroom, and operational logs.</p>
+        </div>
+        <button id="btnRefreshLogs" class="btn btn-outline btn-sm">Refresh Logs</button>
+      </div>
+
+      <div class="card">
+        <div class="card-body">
+          <div class="log-viewer" id="logViewer">
+            <code>[SYSTEM] Cashbook AI Application initialized.</code><br>
+            <code>[SYSTEM] Host bound to 127.0.0.1:8000.</code><br>
+            <code>[REGISTRY] Canonical registry loaded with 60 heads and 25 subheads.</code><br>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Modal for Creating New Month -->
+  <div id="newMonthModal" class="modal-overlay" style="display: none;">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>Create New Accounting Month</h3>
+        <button class="modal-close" id="btnCloseNewMonth">×</button>
+      </div>
+      <div class="modal-body">
+        <label for="newMonthInput">Accounting Month (YYYY-MM):</label>
+        <input type="text" id="newMonthInput" class="form-input" placeholder="e.g. 2026-06" pattern="^\d{4}-\d{2}$">
+        <p class="text-muted text-sm mt-1">Initializes clean partitioned directories under <code>data/monthly/</code> and <code>data/output/</code>.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="btnCancelNewMonth">Cancel</button>
+        <button class="btn btn-primary" id="btnSubmitNewMonth">Create Month</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Override Modal -->
+  <div id="overrideModal" class="modal-overlay" style="display: none;">
+    <div class="modal-box modal-lg">
+      <div class="modal-header">
+        <h3>Override Transaction Mapping</h3>
+        <button class="modal-close" id="btnCloseOverride">×</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="overrideTxId">
+        <div class="override-tx-preview">
+          <div><strong>Narration:</strong> <span id="overrideNarration">--</span></div>
+          <div><strong>Amount:</strong> <span id="overrideAmount">--</span></div>
+          <div><strong>Direction:</strong> <span id="overrideDirection">--</span></div>
+        </div>
+
+        <div class="form-group mt-2">
+          <label for="overrideHeadSelect">Select Canonical Head:</label>
+          <select id="overrideHeadSelect" class="form-select"></select>
+        </div>
+
+        <div class="form-group mt-2" id="overrideSubheadGroup">
+          <label for="overrideSubheadSelect">Select Canonical Subhead (Optional / Mandatory):</label>
+          <select id="overrideSubheadSelect" class="form-select"></select>
+        </div>
+
+        <div class="form-group mt-2">
+          <label for="overrideNotes">Reviewer Notes:</label>
+          <input type="text" id="overrideNotes" class="form-input" placeholder="e.g. Corrected based on physical cashbook note">
+        </div>
+
+        <div class="form-check mt-2">
+          <input type="checkbox" id="overridePromoteAlias" class="form-checkbox">
+          <label for="overridePromoteAlias">Promote this narration to permanent alias for this canonical head</label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="btnCancelOverride">Cancel</button>
+        <button class="btn btn-primary" id="btnSubmitOverride">Apply Override</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Transaction Modal -->
+  <div id="editModal" class="modal-overlay" style="display: none;">
+    <div class="modal-box modal-lg">
+      <div class="modal-header">
+        <h3>Edit Transaction</h3>
+        <button class="modal-close" id="btnCloseEdit">×</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="editTxId">
+        
+        <div class="override-tx-preview" id="editMetaPreview">
+          <div><strong>Source Image:</strong> <span id="editSourceImage">--</span></div>
+          <div><strong>Page / Row:</strong> Pg <span id="editSourcePage">--</span>, Row <span id="editSourceRow">--</span></div>
+          <div><strong>Original Voucher:</strong> <span id="editOrigVoucher">--</span></div>
+          <div><strong>Original Folio:</strong> <span id="editOrigHead">--</span></div>
+        </div>
+
+        <div class="form-grid-2 mt-3">
+          <div class="form-group">
+            <label for="editDate">Date (YYYY-MM-DD):</label>
+            <input type="text" id="editDate" class="form-input" placeholder="YYYY-MM-DD" required>
+          </div>
+          <div class="form-group">
+            <label for="editDirection">Direction:</label>
+            <select id="editDirection" class="form-select">
+              <option value="RECEIPT">RECEIPT</option>
+              <option value="PAYMENT">PAYMENT</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-grid-2 mt-2">
+          <div class="form-group">
+            <label for="editVoucher">Receipt / Voucher Number:</label>
+            <input type="text" id="editVoucher" class="form-input" placeholder="e.g. 536 or -">
+          </div>
+          <div class="form-group">
+            <label for="editAmount">Amount (₹):</label>
+            <input type="number" id="editAmount" class="form-input" step="0.01" min="0.01" placeholder="0.00" required>
+          </div>
+        </div>
+
+        <div class="form-group mt-2">
+          <label for="editHeadSearch">Canonical Accounting Head:</label>
+          <div class="searchable-combobox">
+            <input type="text" id="editHeadSearch" class="form-input" placeholder="Type to search canonical head..." autocomplete="off">
+            <input type="hidden" id="editHeadId">
+            <div id="editHeadDropdown" class="combobox-dropdown" style="display: none;"></div>
+          </div>
+          <small class="text-muted" id="editHeadPolicyHint">Type to search canonical accounting heads. Free-text entries are not permitted.</small>
+        </div>
+
+        <div class="form-group mt-2" id="editSubheadGroup">
+          <label for="editSubheadSelect" id="editSubheadLabel">Subhead:</label>
+          <select id="editSubheadSelect" class="form-select"></select>
+          <div id="editSubheadPolicyWarning" class="text-warning text-sm mt-1" style="display: none;">A valid subhead is required for this accounting head.</div>
+        </div>
+
+        <div class="form-group mt-2">
+          <label for="editNarration">Narration:</label>
+          <textarea id="editNarration" class="form-input" rows="2" placeholder="Transaction description or narration" required></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="btnCancelEdit">Cancel</button>
+        <button class="btn btn-primary" id="btnSaveEdit">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
