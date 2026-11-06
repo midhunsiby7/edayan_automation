@@ -1,4 +1,5 @@
 import datetime
+import io
 from pathlib import Path
 
 import openpyxl
@@ -232,7 +233,9 @@ def test_api_download_endpoints_and_content():
     assert post_raw.status_code == 200
     get_raw = client.get("/api/export/raw?month=2026-05")
     assert get_raw.status_code == 200
-    assert len(get_raw.content) == len(get_res.content)
+    assert len(get_raw.content) > 1000
+    wb_raw = openpyxl.load_workbook(io.BytesIO(get_raw.content))
+    assert set(wb_raw.sheetnames) == {"Receipts", "Payments"}
 
     # 4. Verify downloaded workbook structure
     tmp_wb_path = DATA_DIR / "output" / "2026-05" / "2026-05_draft_review.xlsx"

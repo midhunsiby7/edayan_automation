@@ -281,3 +281,61 @@ def test_golden_verified_dataset_fixture_integrity():
         assert "verified_amount" in r
         assert "expected_canonical_head_id" in r
         assert "verification_source" in r
+
+
+def test_sequential_bank_voucher_transposition_in_head(aligner):
+    """Test sequential bank cheque vouchers 8 and 9 transposed into head column following voucher 7."""
+    row16 = RawExtractedRow(
+        source_image="page_002.jpeg",
+        source_page="2",
+        source_row=16,
+        raw_date="16.05.26",
+        raw_head_number="6",
+        raw_voucher_number="7",
+        raw_narration="S.B withdrawal South Indian Bank",
+        raw_amount_col1="53749",
+        detected_amount_column=1,
+    )
+    row17 = RawExtractedRow(
+        source_image="page_002.jpeg",
+        source_page="2",
+        source_row=17,
+        raw_date="..",
+        raw_head_number="8",
+        raw_voucher_number="-",
+        raw_narration="Bishop Pala",
+        raw_amount_col1="104180",
+        detected_amount_column=1,
+    )
+    row18 = RawExtractedRow(
+        source_image="page_002.jpeg",
+        source_page="2",
+        source_row=18,
+        raw_date="..",
+        raw_head_number="9",
+        raw_voucher_number="-",
+        raw_narration="Good Shepherd Minor Seminary",
+        raw_amount_col1="13245",
+        detected_amount_column=1,
+    )
+
+    aligned_rows = aligner.align_page([row16, row17, row18])
+
+    # Row 16: standard
+    assert aligned_rows[0].aligned_head_number == "6"
+    assert aligned_rows[0].aligned_voucher_number == "7"
+    assert aligned_rows[0].shift_type == ColumnShiftType.NONE
+
+    # Row 17 (Bishop Pala): inherits Folio 6, resolves Voucher 8
+    assert aligned_rows[1].shift_type == ColumnShiftType.VOUCHER_IN_HEAD
+    assert aligned_rows[1].aligned_head_number == "6"
+    assert aligned_rows[1].aligned_voucher_number == "8"
+    assert aligned_rows[1].aligned_date == "16.05.26"
+    assert aligned_rows[1].aligned_amount_col1 == "104180"
+
+    # Row 18 (Good Shepherd Minor Seminary): inherits Folio 6, resolves Voucher 9
+    assert aligned_rows[2].shift_type == ColumnShiftType.VOUCHER_IN_HEAD
+    assert aligned_rows[2].aligned_head_number == "6"
+    assert aligned_rows[2].aligned_voucher_number == "9"
+    assert aligned_rows[2].aligned_date == "16.05.26"
+    assert aligned_rows[2].aligned_amount_col1 == "13245"

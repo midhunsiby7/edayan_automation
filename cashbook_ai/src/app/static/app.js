@@ -722,6 +722,10 @@ function renderReviewItems() {
     const rawDate = it.date || it.raw_date;
     const displayDate = formatDisplayDate(rawDate);
     const missingSubhead = isMandatorySubheadMissing(it);
+    const missingHead = !it.canonical_head_name || !it.canonical_head_id;
+    if (missingHead) {
+      card.style.borderLeft = "4px solid #dc2626";
+    }
 
     card.innerHTML = `
       <div class="review-cell-meta">
@@ -742,7 +746,7 @@ function renderReviewItems() {
       </div>
 
       <div class="review-cell-mapping">
-        <div class="mapped-head-name">${escapeHtml(it.canonical_head_name) || '<span class="text-danger">UNRESOLVED</span>'}</div>
+        <div class="mapped-head-name">${escapeHtml(it.canonical_head_name) || '<span class="badge badge-danger text-xs font-bold" style="background:#dc2626; color:#ffffff; padding:3px 8px; border-radius:4px; display:inline-block;">HEAD MISSING / REVIEW REQUIRED</span>'}</div>
         ${it.canonical_subhead_name ? `<div class="mapped-subhead-name">Subhead: ${escapeHtml(it.canonical_subhead_name)}</div>` : ''}
         ${missingSubhead ? `<div class="badge badge-danger text-xs mt-1">MANDATORY SUBHEAD MISSING</div>` : ''}
         <div class="mapped-meta mt-1" style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">

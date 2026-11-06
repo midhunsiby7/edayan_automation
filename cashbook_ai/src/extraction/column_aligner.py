@@ -230,6 +230,44 @@ class ColumnAligner:
                 col2 = col2 or col1 or raw_amt
                 col1 = None
 
+        # 2b. Structural Check: Sequential Voucher Transposed into Head Column (VOUCHER_IN_HEAD)
+        # Occurs when the folio column is blank/dittoed for consecutive bank cheque withdrawals,
+        # causing the single voucher number (e.g. 8 after 7, or 9 after 8) to be placed into raw_head_number.
+        if (
+            self.is_empty_or_dash(raw_vouch)
+            and raw_head
+            and raw_head.strip().isdigit()
+            and prev_aligned_row
+            and prev_aligned_row.aligned_voucher_number
+            and prev_aligned_row.aligned_voucher_number.strip().isdigit()
+        ):
+            prev_v = int(prev_aligned_row.aligned_voucher_number.strip())
+            curr_v_candidate = int(raw_head.strip())
+            if curr_v_candidate == prev_v + 1 and prev_aligned_row.aligned_head_number:
+                inherited_head = prev_aligned_row.aligned_head_number
+                aligned_vouch = str(curr_v_candidate)
+
+                return AlignedRow(
+                    raw_row=raw_row,
+                    aligned_date=aligned_date,
+                    aligned_head_number=inherited_head,
+                    aligned_voucher_number=aligned_vouch,
+                    aligned_narration_raw=raw_row.raw_narration,
+                    aligned_narration_english=raw_row.english_narration,
+                    aligned_amount_col1=col1,
+                    aligned_amount_col2=col2,
+                    detected_amount_column=det_col,
+                    shift_type=ColumnShiftType.VOUCHER_IN_HEAD,
+                    alignment_confidence=0.95,
+                    was_date_inherited=was_inherited,
+                    evidence_reason=(
+                        f"Sequential voucher {aligned_vouch} transposed into head column following "
+                        f"voucher {prev_v}; inherited folio {inherited_head}"
+                    ),
+                    row_bbox=raw_row.row_bbox,
+                    needs_human_review=False
+                )
+
         # 3. Check for Head Number Out of Range (>200) with empty voucher (Ambiguous shift)
         if raw_head and raw_head.strip().isdigit() and int(raw_head.strip()) > 200 and self.is_empty_or_dash(raw_vouch):
             return AlignedRow(

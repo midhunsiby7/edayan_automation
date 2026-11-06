@@ -197,6 +197,10 @@ class ManifestBuilder:
                 continue
 
             clean_head = str(head_val or "").strip()
+            if not clean_head:
+                raise ManifestError(
+                    f"{sheet_name} row {r_idx}: Cannot build execution manifest — Canonical Head Name is blank (HEAD MISSING / REVIEW REQUIRED)"
+                )
             head_obj = self._heads_by_name.get(clean_head.lower())
             if not head_obj:
                 head_obj = self.registry.heads.get(clean_head)

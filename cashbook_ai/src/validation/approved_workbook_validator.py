@@ -468,9 +468,10 @@ class ApprovedWorkbookValidator:
 
             # 4. Validate Canonical Head Name
             if not head_val or not str(head_val).strip():
-                err_msg = f"{sheet_name} row {r_idx}: Canonical Head Name cannot be blank"
+                err_msg = f"{sheet_name} row {r_idx}: Canonical Head Name cannot be blank (HEAD MISSING / REVIEW REQUIRED)"
                 errors.append(ValidationError(sheet=sheet_name, row_number=r_idx, column="Head Name", error_message=err_msg))
                 cat_issues["required_fields"].append(err_msg)
+                cat_issues["canonical_mapping"].append(err_msg)
                 continue
 
             clean_head = str(head_val).strip()
