@@ -14,7 +14,7 @@ from src.models import ProcessedRow, RecordType, TransactionType
 
 MANUAL_REVIEW_COLUMNS = [
     "Date",
-    "Receipt Number",
+    "Voucher Number",
     "Amount",
     "Head Name",
     "Subhead",
@@ -140,14 +140,16 @@ class ManualReviewExporter:
         rows: Iterable[ProcessedRow],
         output_path: Path,
         *,
+        include_all_transactions: bool = False,
+        include_folio: bool = False,
         head_name_overrides: dict[tuple[str, str, int], str | None] | None = None,
     ) -> Path:
-        """Export user-facing review workbook with Receipts, Payments, and All_Transactions sheets."""
+        """Export user-facing review workbook with Receipts and Payments sheets (6 columns)."""
         return self.export(
             rows,
             output_path,
-            include_all_transactions=True,
-            include_folio=True,
+            include_all_transactions=include_all_transactions,
+            include_folio=include_folio,
             head_name_overrides=head_name_overrides,
         )
 
@@ -249,14 +251,14 @@ class ManualReviewExporter:
 
         # Styles
         header_fill = PatternFill("solid", fgColor="1F4E79")
-        header_font = Font(name="Calibri", size=12, bold=True, color="FFFFFF")
+        header_font = Font(name="Calibri", size=13, bold=True, color="FFFFFF")
         header_align = Alignment(horizontal="center", vertical="center")
 
-        thin_side = Side(border_style="thin", color="E2E8F0")
+        thin_side = Side(border_style="thin", color="CBD5E1")
         cell_border = Border(left=thin_side, right=thin_side, top=thin_side, bottom=thin_side)
 
-        key_font = Font(name="Calibri", size=11, bold=True, color="1E293B")
-        sub_font = Font(name="Calibri", size=10, bold=False, color="475569")
+        key_font = Font(name="Calibri", size=12, bold=True, color="1E293B")
+        sub_font = Font(name="Calibri", size=11, bold=False, color="475569")
 
         zebra_fill_white = PatternFill("solid", fgColor="FFFFFF")
         zebra_fill_tint = PatternFill("solid", fgColor="F8FAFC")

@@ -774,9 +774,8 @@ def apply_group_decision(req: GroupDecisionRequest):
 # Draft Excel Export & Intake Endpoints
 # =========================================================================
 
-@app.post("/api/export/draft")
-def refresh_draft_workbook(month: str = Form(...)):
-    """Re-generate draft review Excel workbook reflecting current review decisions."""
+def _generate_draft_workbook(month: str) -> tuple[Path, int]:
+    """Internal helper to generate draft review Excel workbook reflecting current review decisions."""
     _validate_month_format(month)
     state_file = DATA_DIR / "output" / month / "review_state.json"
     if not state_file.is_file():
@@ -832,22 +831,25 @@ def refresh_draft_workbook(month: str = Form(...)):
         draft_path = DATA_DIR / "output" / month / f"{month}_draft_review_{ts}.xlsx"
         manual_exporter.export_review_workbook(processed_rows, draft_path)
 
+    return draft_path, len(processed_rows)
+
+
+@app.post("/api/export/draft")
+def refresh_draft_workbook(month: str = Form(...)):
+    """Re-generate draft review Excel workbook reflecting current review decisions."""
+    draft_path, count = _generate_draft_workbook(month)
     return {
         "message": f"Successfully generated draft review workbook for {month}",
         "filename": draft_path.name,
-        "rows_count": len(processed_rows),
+        "rows_count": count,
     }
 
 
 @app.get("/api/export/draft")
-def download_draft_workbook(month: str):
+def download_draft_workbook(month: str, t: Optional[str] = None):
     """Download the generated draft review Excel workbook."""
     _validate_month_format(month)
-    draft_path = (DATA_DIR / "output" / month / f"{month}_draft_review.xlsx").resolve()
-    if not draft_path.is_file():
-        # If not existing, try generating it
-        refresh_draft_workbook(month=month)
-
+    draft_path, _ = _generate_draft_workbook(month)
     if not draft_path.is_file():
         raise HTTPException(status_code=404, detail="Draft workbook not found. Please run processing first.")
 
@@ -855,13 +857,18 @@ def download_draft_workbook(month: str):
         path=draft_path,
         filename=draft_path.name,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={
+            "Cache-Control": "no-cache, no-store, must-revalidate, max-age=0",
+            "Pragma": "no-cache",
+            "Expires": "0",
+        },
     )
 
 
 @app.get("/api/export/raw")
-def download_raw_workbook(month: str):
+def download_raw_workbook(month: str, t: Optional[str] = None):
     """Download the generated review Excel workbook (alias for /api/export/draft)."""
-    return download_draft_workbook(month=month)
+    return download_draft_workbook(month=month, t=t)
 
 
 @app.post("/api/export/raw")

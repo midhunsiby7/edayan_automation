@@ -186,11 +186,18 @@ function applyUrlState() {
 }
 
 function updateDownloadLinks() {
-  const draftUrl = `/api/export/draft?month=${currentMonth}`;
+  const ts = Date.now();
+  const draftUrl = `/api/export/draft?month=${encodeURIComponent(currentMonth)}&t=${ts}`;
   const btn1 = document.getElementById("btnDownloadDraftExcel");
   const btn2 = document.getElementById("btnDownloadDraftExcelFromReview");
-  if (btn1) btn1.href = draftUrl;
-  if (btn2) btn2.href = draftUrl;
+  if (btn1) {
+    btn1.href = draftUrl;
+    btn1.setAttribute("download", `${currentMonth}_draft_review.xlsx`);
+  }
+  if (btn2) {
+    btn2.href = draftUrl;
+    btn2.setAttribute("download", `${currentMonth}_draft_review.xlsx`);
+  }
 }
 
 async function fetchStatus() {
@@ -1786,8 +1793,23 @@ document.getElementById("btnExportDraftExcel").addEventListener("click", async (
       body: `month=${encodeURIComponent(currentMonth)}`,
     });
     const data = await res.json();
+    updateDownloadLinks();
     alert(data.message);
   } catch (e) {
     alert("Error refreshing draft excel: " + e.message);
   }
 });
+
+// Cache-busting click handlers on download links
+const btnDownload1 = document.getElementById("btnDownloadDraftExcel");
+if (btnDownload1) {
+  btnDownload1.addEventListener("click", () => {
+    btnDownload1.href = `/api/export/draft?month=${encodeURIComponent(currentMonth)}&t=${Date.now()}`;
+  });
+}
+const btnDownload2 = document.getElementById("btnDownloadDraftExcelFromReview");
+if (btnDownload2) {
+  btnDownload2.addEventListener("click", () => {
+    btnDownload2.href = `/api/export/draft?month=${encodeURIComponent(currentMonth)}&t=${Date.now()}`;
+  });
+}
