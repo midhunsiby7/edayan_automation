@@ -495,19 +495,25 @@ def test_ocr_production_safety_rejects_mock(monkeypatch, tmp_path):
 # Part 9: FastAPI Execution Endpoints Integration
 # =========================================================================
 
-def test_execution_api_endpoints_integration(client, tmp_path):
+def test_execution_api_endpoints_integration(client, tmp_path, monkeypatch):
     """Verify FastAPI execution endpoints: upload-approved, authorize, status, and reconciliation."""
-    wb_path = tmp_path / "approved_api.xlsx"
-    rec_data = [{"date": "2026-05-01", "receipt_number": "1", "amount": 1000.0, "head_name": "Donation/Offering for Special Purposes(C)"}]
-    pay_data = [{"date": "2026-05-02", "receipt_number": "51", "amount": 400.0, "head_name": "Electricity Charges"}]
+    test_data_dir = tmp_path / "data"
+    test_data_dir.mkdir(parents=True, exist_ok=True)
+    monkeypatch.setattr("src.app.main.DATA_DIR", test_data_dir)
+    monkeypatch.setattr(execution_manager, "data_dir", test_data_dir)
+
+    test_month = "2026-09"
+    wb_path = tmp_path / "valid_approved.xlsx"
+    rec_data = [{"date": "2026-09-01", "receipt_number": "1", "amount": 1000.0, "head_name": "Donation/Offering for Special Purposes(C)"}]
+    pay_data = [{"date": "2026-09-02", "receipt_number": "51", "amount": 400.0, "head_name": "Electricity Charges"}]
     create_sample_approved_workbook(wb_path, rec_data, pay_data)
 
     # 1. POST /api/upload-approved
     with open(wb_path, "rb") as f:
         resp = client.post(
             "/api/upload-approved",
-            data={"month": "2026-05"},
-            files={"file": ("approved_api.xlsx", f, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")},
+            data={"month": test_month, "enforce_physical_targets": "false"},
+            files={"file": ("valid_approved.xlsx", f, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")},
         )
     assert resp.status_code == 200
     summary = resp.json()
@@ -519,7 +525,7 @@ def test_execution_api_endpoints_integration(client, tmp_path):
     auth_resp = client.post(
         "/api/execution/authorize",
         json={
-            "month": "2026-05",
+            "month": test_month,
             "workbook_sha256": file_hash,
             "authorizer": "Accountant",
             "opening_balance": 18506.60,
@@ -531,7 +537,7 @@ def test_execution_api_endpoints_integration(client, tmp_path):
     assert "batch_id" in auth_data
 
     # 3. GET /api/execution/status
-    stat_resp = client.get("/api/execution/status?month=2026-05")
+    stat_resp = client.get(f"/api/execution/status?month={test_month}")
     assert stat_resp.status_code == 200
     status_data = stat_resp.json()
     assert status_data["is_authorized"] is True
@@ -548,3 +554,40 @@ def test_execution_api_endpoints_integration(client, tmp_path):
     cancel_resp = client.post("/api/execution/cancel")
     assert cancel_resp.status_code == 200
     assert cancel_resp.json()["status"] == "CANCELLED"
+
+
+def test_synthetic_two_row_may_workbook_is_blocked(client, tmp_path, monkeypatch):
+    """Verify that a synthetic or incomplete two-row workbook for May 2026 strictly produces BLOCKED."""
+    test_data_dir = tmp_path / "data"
+    test_data_dir.mkdir(parents=True, exist_ok=True)
+    monkeypatch.setattr("src.app.main.DATA_DIR", test_data_dir)
+    monkeypatch.setattr(execution_manager, "data_dir", test_data_dir)
+
+    wb_path = tmp_path / "approved_api.xlsx"
+    rec_data = [{"date": "2026-05-01", "receipt_number": "1", "amount": 1000.0, "head_name": "Donation/Offering for Special Purposes(C)"}]
+    pay_data = [{"date": "2026-05-02", "receipt_number": "51", "amount": 400.0, "head_name": "Electricity Charges"}]
+    create_sample_approved_workbook(wb_path, rec_data, pay_data)
+
+    with open(wb_path, "rb") as f:
+        resp = client.post(
+            "/api/upload-approved",
+            data={"month": "2026-05"},
+            files={"file": ("approved_api.xlsx", f, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")},
+        )
+    assert resp.status_code == 200
+    summary = resp.json()
+    assert summary["is_valid"] is False
+    assert "BLOCKED" in summary["status"]
+    assert summary["source_coverage_percent"] < 10.0
+
+    # Authorization must also be rejected
+    auth_resp = client.post(
+        "/api/execution/authorize",
+        json={
+            "month": "2026-05",
+            "workbook_sha256": summary["file_hash_sha256"],
+            "authorizer": "Accountant",
+        },
+    )
+    assert auth_resp.status_code == 400
+    assert "Cannot authorize batch" in auth_resp.json()["detail"] or "BLOCKED" in auth_resp.json()["detail"]

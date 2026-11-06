@@ -110,6 +110,17 @@ def _check_relay_connectivity() -> str:
 # System & Status Endpoints
 # =========================================================================
 
+@app.get("/api/version")
+def get_version():
+    """Return build version, commit hash, and application identifier."""
+    return {
+        "app": "Cashbook AI",
+        "version": "1.2.0",
+        "commit": "39f0f64",
+        "status": "ONLINE",
+    }
+
+
 @app.get("/api/status")
 def get_system_status():
     """Return application health, active accounting period, hardware, and service status."""
@@ -478,6 +489,37 @@ def get_review_state(month: str):
         items = data.get("items", [])
         groups = data.get("groups", [])
 
+        # Segregate opening balance accounting reference
+        opening_record = data.get("opening_balance_record")
+        filtered_items = []
+        needs_state_save = False
+
+        for it in items:
+            narr = (it.get("raw_narration") or "").strip().lower()
+            is_opening = (
+                "opening balance" in narr
+                or "മുൻബാക്കി" in narr
+                or (str(it.get("source_page")) == "1" and str(it.get("source_row")) == "1" and "balance" in narr)
+            )
+            if is_opening:
+                if not opening_record:
+                    opening_record = it
+                    needs_state_save = True
+            else:
+                filtered_items.append(it)
+
+        if len(filtered_items) != len(items):
+            items = filtered_items
+            data["items"] = items
+            data["opening_balance_record"] = opening_record
+            needs_state_save = True
+
+        if needs_state_save:
+            try:
+                state_file.write_text(json.dumps(data, indent=2), encoding="utf-8")
+            except Exception as se:
+                logger.warning(f"Could not update review_state with segregated opening balance: {se}")
+
         # Ensure multi-item clusters are available for review intelligence
         if not any(g.get("transaction_count", 0) > 1 for g in groups) and items:
             all_items = [ReviewItem(**it) for it in items]
@@ -500,6 +542,7 @@ def get_review_state(month: str):
             "stats": stats,
             "groups": groups,
             "items": items,
+            "opening_balance_record": opening_record,
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to load review state: {str(e)}")
@@ -744,12 +787,19 @@ def refresh_draft_workbook(month: str = Form(...)):
 
     processed_rows = []
     for it in items:
+        narr_lower = (it.raw_narration or "").strip().lower()
+        if (
+            "opening balance" in narr_lower
+            or "മുൻബാക്കി" in narr_lower
+            or (str(it.source_page) == "1" and str(it.source_row) == "1" and "balance" in narr_lower)
+        ):
+            continue  # Segregated accounting reference, never written to draft transaction sheets
+
+        if "closing balance" in narr_lower:
+            continue
+
         t_type = TransactionType.RECEIPT if it.direction == "RECEIPT" else TransactionType.PAYMENT
         rec_type = RecordType.TRANSACTION
-        if "opening balance" in (it.raw_narration or "").lower():
-            rec_type = RecordType.OPENING_BALANCE
-        elif "closing balance" in (it.raw_narration or "").lower():
-            rec_type = RecordType.CLOSING_BALANCE
 
         p_row = ProcessedRow(
             source_image=it.source_image,
@@ -966,6 +1016,28 @@ def authorize_execution_batch(req: BatchAuthorizeRequest):
     sha = req.workbook_sha256 or req.file_hash_sha256
     if not sha:
         raise HTTPException(status_code=400, detail="Missing workbook SHA-256 hash.")
+
+    # Guard: Preflight summary must exist, be valid, and match the hash
+    staging_dir = DATA_DIR / "output" / req.month / "intake"
+    preflight_report_file = staging_dir / f"{req.month}_preflight_summary.json"
+    if preflight_report_file.is_file():
+        try:
+            summary_data = json.loads(preflight_report_file.read_text(encoding="utf-8"))
+            if not summary_data.get("is_valid", False) or summary_data.get("status") != "READY_FOR_EXECUTION":
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Cannot authorize batch: Preflight status is '{summary_data.get('status')}'. {summary_data.get('blocked_reason') or ''}"
+                )
+            if summary_data.get("file_hash_sha256") and summary_data.get("file_hash_sha256") != sha:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Cannot authorize batch: Preflight hash mismatch. Summary hash {summary_data.get('file_hash_sha256')} != requested {sha}"
+                )
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.warning(f"Error checking preflight summary during authorization: {e}")
+
     authorizer_name = req.authorizer_role or req.authorizer
     try:
         auth_record = execution_manager.authorize_batch(

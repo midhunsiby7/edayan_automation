@@ -517,6 +517,16 @@ document.getElementById("btnCancelJob").addEventListener("click", async () => {
 // Review Intelligence
 // =========================================================================
 
+function formatDisplayDate(val) {
+  if (!val || !String(val).trim() || String(val).trim() === "None") return null;
+  const s = String(val).trim();
+  const m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (m) {
+    return `${m[3]}-${m[2]}-${m[1]}`;
+  }
+  return s;
+}
+
 async function loadReviewData() {
   try {
     const res = await fetch(`/api/review?month=${currentMonth}`);
@@ -524,6 +534,20 @@ async function loadReviewData() {
 
     allReviewItems = data.items || [];
     allReviewGroups = data.groups || [];
+
+    // Opening balance reference banner
+    const opBanner = document.getElementById("openingBalanceBanner");
+    if (opBanner) {
+      if (data.opening_balance_record) {
+        opBanner.style.display = "flex";
+        const opAmt = data.opening_balance_record.amount !== null 
+          ? `₹${Number(data.opening_balance_record.amount).toLocaleString("en-IN", {minimumFractionDigits: 2})}`
+          : "₹18,506.60";
+        document.getElementById("openingBalanceAmount").textContent = opAmt;
+      } else {
+        opBanner.style.display = "none";
+      }
+    }
 
     // Summary counts
     const stats = data.stats || { total: 0, verified: 0, suggested: 0, provisional: 0, unresolved: 0 };
@@ -688,14 +712,15 @@ function renderReviewItems() {
     const dirClass = isRec ? "tx-receipt" : "tx-payment";
     const amtStr = it.amount !== null ? `₹${it.amount.toLocaleString("en-IN", {minimumFractionDigits: 2})}` : "₹0.00";
     const vouchStr = it.voucher_number || it.raw_voucher_number;
-    const dateStr = it.date || it.raw_date;
+    const rawDate = it.date || it.raw_date;
+    const displayDate = formatDisplayDate(rawDate);
     const missingSubhead = isMandatorySubheadMissing(it);
 
     card.innerHTML = `
       <div class="review-cell-meta">
         <div><strong>Pg ${escapeHtml(it.source_page)}</strong></div>
         <div class="meta-date" style="margin-top: 3px;">
-          ${dateStr ? `<span>📅 ${escapeHtml(dateStr)}</span>` : `<span class="badge badge-warning text-xs">DATE MISSING</span>`}
+          ${displayDate ? `<span>📅 ${escapeHtml(displayDate)}</span>` : `<span class="badge badge-warning text-xs">DATE MISSING</span>`}
         </div>
         <div class="meta-voucher" style="margin-top: 2px;">
           ${vouchStr ? `<span>V.# ${escapeHtml(vouchStr)}</span>` : `<span class="badge badge-warning text-xs">VOUCHER MISSING</span>`}
@@ -1296,6 +1321,7 @@ async function handleApprovedUpload(file) {
 
   const formData = new FormData();
   formData.append("month", currentMonth);
+  formData.append("enforce_physical_targets", "true");
   formData.append("file", file);
 
   try {

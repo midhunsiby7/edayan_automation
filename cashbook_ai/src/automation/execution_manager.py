@@ -519,6 +519,24 @@ class ExecutionManager:
         if not snapshot_file.is_file():
             raise FileNotFoundError(f"Approved snapshot for hash {workbook_sha256} not found in {snapshot_dir}")
 
+        # Strictly check that preflight validation passes
+        staging_dir = self.data_dir / "output" / month / "intake"
+        preflight_file = staging_dir / f"{month}_preflight_summary.json"
+        if preflight_file.is_file():
+            try:
+                pf_data = json.loads(preflight_file.read_text(encoding="utf-8"))
+                if not pf_data.get("is_valid", False) or pf_data.get("status") != "READY_FOR_EXECUTION":
+                    reason = pf_data.get("blocked_reason") or pf_data.get("status")
+                    raise ValueError(f"Batch cannot be authorized: pre-flight validation status is '{pf_data.get('status')}'. Reason: {reason}")
+                if pf_data.get("file_hash_sha256") and pf_data.get("file_hash_sha256") != workbook_sha256:
+                    raise ValueError(
+                        f"Batch cannot be authorized: preflight summary hash ({pf_data.get('file_hash_sha256')}) "
+                        f"does not match requested workbook hash ({workbook_sha256})."
+                    )
+            except Exception as e:
+                if isinstance(e, ValueError):
+                    raise
+
         manifests_dir = self.data_dir / "output" / month / "manifests"
         manifests_dir.mkdir(parents=True, exist_ok=True)
 

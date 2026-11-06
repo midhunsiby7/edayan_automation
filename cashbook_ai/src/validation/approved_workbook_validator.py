@@ -152,6 +152,12 @@ class ApprovedWorkbookValidator:
             "artifact_integrity": [],
         }
 
+        # Check for synthetic / test artifact naming
+        if re.search(r"(?:approved_api|.*_api\.xlsx$|.*[_\-]mock.*|.*[_\-]sample.*)", file_path.name, re.IGNORECASE):
+            err_msg = f"EXECUTION BLOCKED — Synthetic or test artifact detected ('{file_path.name}'). Production execution requires genuine monthly workbook."
+            errors.append(ValidationError(sheet="WORKBOOK", row_number=0, column="FILE", error_message=err_msg))
+            cat_issues["artifact_integrity"].append(err_msg)
+
         try:
             wb = openpyxl.load_workbook(file_path, data_only=True)
         except Exception as e:
@@ -582,15 +588,30 @@ class ApprovedWorkbookValidator:
         all_cats_pass = all(c.status == ValidationCategoryStatus.PASS for c in categories.values())
         is_valid = (len(errors) == 0 and variance_dec == Decimal("0") and all_cats_pass)
 
+        target_tx_count = None
+        if expected_month in self._targets_cache:
+            target_tx_count = self._targets_cache[expected_month].get("total_transactions")
+
+        total_tx = rec_count + pay_count
+        if target_tx_count and target_tx_count > 0:
+            source_coverage_pct = round((total_tx / target_tx_count) * 100.0, 1)
+        else:
+            source_coverage_pct = 100.0 if total_tx > 0 else 0.0
+
         if is_valid:
             status_str = "READY_FOR_EXECUTION"
+        elif any("Synthetic or test artifact detected" in e.error_message for e in errors):
+            status_str = "BLOCKED — INVALID PRODUCTION WORKBOOK. Synthetic or test artifact detected."
         elif variance_dec != Decimal("0"):
             status_str = "BLOCKED - BALANCE MISMATCH"
         else:
             status_str = "VALIDATION_FAILED"
         blocked_reason = None
         if not is_valid:
-            if variance_dec != Decimal("0"):
+            synthetic_errors = [e.error_message for e in errors if "Synthetic or test artifact detected" in e.error_message]
+            if synthetic_errors:
+                blocked_reason = synthetic_errors[0]
+            elif variance_dec != Decimal("0"):
                 blocked_reason = (
                     f"Closing balance mismatch: Workbook ₹{float(computed_closing_dec):,.2f} "
                     f"vs Physical ₹{float(target_closing_dec):,.2f} "
@@ -620,7 +641,7 @@ class ApprovedWorkbookValidator:
             physical_closing_balance=float(target_closing_dec),
             closing_balance_variance=float(variance_dec),
             physical_opening_verified=physical_verified,
-            source_coverage_percent=100.0 if (rec_count + pay_count) > 0 else 0.0,
+            source_coverage_percent=source_coverage_pct,
             website_mapping_status=web_status,
             snapshot_path=snapshot_path_str,
             categories=categories,
