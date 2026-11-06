@@ -116,7 +116,7 @@ def get_version():
     return {
         "app": "Cashbook AI",
         "version": "1.2.0",
-        "commit": "39f0f64",
+        "commit": "06ed44f",
         "status": "ONLINE",
     }
 
