@@ -68,6 +68,7 @@ tests/fixtures/provisional_may_eval.json
 !package.json
 !manifest.json
 !data/reference/canonical_accounting_reference.json
+!data/reference/monthly_reconciliation_targets.json
 
 # Local scratch scripts and models
 scratch/

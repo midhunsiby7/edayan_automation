@@ -65,6 +65,7 @@ class ColumnAligner:
 
     def __init__(self, known_folio_range: Tuple[int, int] = (1, 150)):
         self.known_folio_range = known_folio_range
+        self.last_resolved_date: Optional[str] = None
 
     def is_likely_date_format(self, text: Optional[str]) -> bool:
         """Check if text contains date delimiters (. / -) or month indicators."""
@@ -158,7 +159,25 @@ class ColumnAligner:
                 aligned_vouch_candidate = raw_vouch.strip()
 
         if is_transposition and aligned_vouch_candidate:
-            inherited_date = prev_aligned_row.aligned_date if prev_aligned_row else None
+            inherited_date = prev_aligned_row.aligned_date if (prev_aligned_row and prev_aligned_row.aligned_date) else self.last_resolved_date
+            if inherited_date:
+                self.last_resolved_date = inherited_date
+
+            det_col = raw_row.detected_amount_column
+            col1 = raw_row.raw_amount_col1
+            col2 = raw_row.raw_amount_col2
+            raw_amt = raw_row.raw_amount
+            if aligned_vouch_candidate.isdigit():
+                v_num = int(aligned_vouch_candidate)
+                if v_num >= 500:
+                    det_col = 1
+                    col1 = col1 or col2 or raw_amt
+                    col2 = None
+                elif 30 <= v_num <= 100:
+                    det_col = 2
+                    col2 = col2 or col1 or raw_amt
+                    col1 = None
+
             return AlignedRow(
                 raw_row=raw_row,
                 aligned_date=inherited_date,
@@ -166,9 +185,9 @@ class ColumnAligner:
                 aligned_voucher_number=aligned_vouch_candidate,    # Real Voucher
                 aligned_narration_raw=raw_row.raw_narration,
                 aligned_narration_english=raw_row.english_narration,
-                aligned_amount_col1=raw_row.raw_amount_col1,
-                aligned_amount_col2=raw_row.raw_amount_col2,
-                detected_amount_column=raw_row.detected_amount_column,
+                aligned_amount_col1=col1,
+                aligned_amount_col2=col2,
+                detected_amount_column=det_col,
                 shift_type=ColumnShiftType.FOLIO_IN_DATE_VOUCHER_IN_HEAD,
                 alignment_confidence=0.95,
                 was_date_inherited=bool(inherited_date),
@@ -187,6 +206,29 @@ class ColumnAligner:
             if prev_aligned_row and prev_aligned_row.aligned_date:
                 aligned_date = prev_aligned_row.aligned_date
                 was_inherited = True
+            elif self.last_resolved_date:
+                aligned_date = self.last_resolved_date
+                was_inherited = True
+
+        if aligned_date and self.is_likely_date_format(aligned_date):
+            self.last_resolved_date = aligned_date
+
+        # Calibrate amount column for normal rows based on known voucher ranges
+        det_col = raw_row.detected_amount_column
+        col1 = raw_row.raw_amount_col1
+        col2 = raw_row.raw_amount_col2
+        raw_amt = raw_row.raw_amount
+        v_str = (raw_vouch or "").strip()
+        if v_str.isdigit():
+            v_num = int(v_str)
+            if v_num >= 500 and det_col == 2:
+                det_col = 1
+                col1 = col1 or col2 or raw_amt
+                col2 = None
+            elif 30 <= v_num <= 100 and det_col == 1:
+                det_col = 2
+                col2 = col2 or col1 or raw_amt
+                col1 = None
 
         # 3. Check for Head Number Out of Range (>200) with empty voucher (Ambiguous shift)
         if raw_head and raw_head.strip().isdigit() and int(raw_head.strip()) > 200 and self.is_empty_or_dash(raw_vouch):
@@ -197,9 +239,9 @@ class ColumnAligner:
                 aligned_voucher_number=raw_vouch,
                 aligned_narration_raw=raw_row.raw_narration,
                 aligned_narration_english=raw_row.english_narration,
-                aligned_amount_col1=raw_row.raw_amount_col1,
-                aligned_amount_col2=raw_row.raw_amount_col2,
-                detected_amount_column=raw_row.detected_amount_column,
+                aligned_amount_col1=col1,
+                aligned_amount_col2=col2,
+                detected_amount_column=det_col,
                 shift_type=ColumnShiftType.FIELD_SHIFT_SUSPECTED,
                 alignment_confidence=0.60,
                 was_date_inherited=was_inherited,
@@ -216,9 +258,9 @@ class ColumnAligner:
             aligned_voucher_number=raw_vouch,
             aligned_narration_raw=raw_row.raw_narration,
             aligned_narration_english=raw_row.english_narration,
-            aligned_amount_col1=raw_row.raw_amount_col1,
-            aligned_amount_col2=raw_row.raw_amount_col2,
-            detected_amount_column=raw_row.detected_amount_column,
+            aligned_amount_col1=col1,
+            aligned_amount_col2=col2,
+            detected_amount_column=det_col,
             shift_type=ColumnShiftType.NONE,
             alignment_confidence=1.0,
             was_date_inherited=was_inherited,

@@ -1,0 +1,24 @@
+{
+  "2026-04": {
+    "month": "2026-04",
+    "opening_balance": 33382.60,
+    "total_receipts": 400562.00,
+    "total_payments": 415438.00,
+    "closing_balance": 18506.60,
+    "receipts_count": 20,
+    "payments_count": 32,
+    "total_transactions": 52,
+    "source_notes": "April 2026 verified physical cashbook handoff"
+  },
+  "2026-05": {
+    "month": "2026-05",
+    "opening_balance": 18506.60,
+    "total_receipts": 516867.00,
+    "total_payments": 475438.00,
+    "closing_balance": 59935.60,
+    "receipts_count": 30,
+    "payments_count": 44,
+    "total_transactions": 74,
+    "source_notes": "May 2026 physical cashbook photograph Page 3: Receipts 535373.60 (incl 18506.60 opening), Payments 475438.00, Closing 59935.60"
+  }
+}

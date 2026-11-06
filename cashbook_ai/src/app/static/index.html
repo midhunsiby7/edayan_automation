@@ -180,7 +180,8 @@
           <h2>Processing Orchestration</h2>
           <p class="subtitle">Background execution through extraction, alignment, hybrid mapping, and review preparation.</p>
         </div>
-        <div>
+        <div style="display: flex; gap: 8px;">
+          <button id="btnResetMayFromProcessing" class="btn btn-outline-danger btn-sm" style="display: none;">⚠ Reset May 2026</button>
           <button id="btnCancelJob" class="btn btn-danger btn-sm" style="display: none;">Cancel Processing</button>
         </div>
       </div>
@@ -288,6 +289,7 @@
           <p class="subtitle">Audit suggested classifications, resolve ambiguities, and confirm transactions.</p>
         </div>
         <div class="review-actions-header">
+          <button id="btnResetMayReview" class="btn btn-outline-danger btn-sm" style="display: none;">⚠ Reset May Review Data & Reprocess</button>
           <button id="btnExportDraftExcel" class="btn btn-outline btn-sm">Refresh Draft Excel</button>
           <a id="btnDownloadDraftExcelFromReview" href="#" class="btn btn-primary btn-sm" target="_blank">Download Draft Review Workbook (.xlsx)</a>
         </div>
@@ -360,6 +362,8 @@
           <span class="badge" id="preflightStatusBadge">VALIDATION_PASSED</span>
         </div>
         <div class="card-body">
+          <div id="pfBlockedBanner" class="alert alert-danger" style="display: none; font-size: 14px; font-weight: 700; padding: 14px 16px; margin-bottom: 20px; border-left: 6px solid #ef4444;"></div>
+
           <div class="preflight-grid">
             <div class="pf-item">
               <span class="pf-label">Accounting Month:</span>
@@ -403,14 +407,17 @@
             </div>
           </div>
 
-          <div id="pfErrorsSection" class="pf-alerts" style="display: none;">
+          <!-- Structured Preflight Categories Section -->
+          <div id="pfCategoriesSection" style="margin-top: 24px;"></div>
+
+          <div id="pfErrorsSection" class="pf-alerts" style="display: none; margin-top: 16px;">
             <div class="alert alert-danger">
               <h4>Validation Errors Detected (<span id="pfErrorCount">0</span>)</h4>
               <ul id="pfErrorsList"></ul>
             </div>
           </div>
 
-          <div id="pfSuccessSection" class="pf-alerts" style="display: none;">
+          <div id="pfSuccessSection" class="pf-alerts" style="display: none; margin-top: 16px;">
             <div class="alert alert-success flex-between">
               <div>
                 ✓ <strong>All canonical heads, subhead rules, and website mappings verified.</strong> The workbook is cryptographically snapshot and ready for bounded batch execution.

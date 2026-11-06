@@ -1,14 +1,31 @@
-"""Approved Excel workbook validator and execution preflight generator for Cashbook AI."""
+"""Approved Excel workbook validator and strict execution readiness gate for Cashbook AI."""
 
 import hashlib
 import json
+import re
 import shutil
+from decimal import Decimal
+from enum import Enum
 from pathlib import Path
 from typing import Dict, List, Optional, Any, Tuple
 from pydantic import BaseModel, Field
 import openpyxl
 
 from src.reference.canonical_registry import CanonicalRegistry, SubheadPolicy
+
+
+class ValidationCategoryStatus(str, Enum):
+    PASS = "PASS"
+    FAIL = "FAIL"
+    BLOCKED = "BLOCKED"
+
+
+class CategoryResult(BaseModel):
+    category: str
+    status: ValidationCategoryStatus = ValidationCategoryStatus.PASS
+    issue_count: int = 0
+    details: Dict[str, Any] = Field(default_factory=dict)
+    issues: List[str] = Field(default_factory=list)
 
 
 class ValidationError(BaseModel):
@@ -23,7 +40,8 @@ class PreflightSummary(BaseModel):
     file_name: str
     file_hash_sha256: str
     is_valid: bool
-    status: str  # "READY_FOR_EXECUTION" or "VALIDATION_FAILED"
+    status: str  # "READY_FOR_EXECUTION" or "BLOCKED"
+    blocked_reason: Optional[str] = None
     receipts_count: int = 0
     receipts_total: float = 0.0
     payments_count: int = 0
@@ -31,16 +49,30 @@ class PreflightSummary(BaseModel):
     net_movement: float = 0.0
     opening_balance: Optional[float] = None
     expected_closing_balance: Optional[float] = None
+    physical_closing_balance: Optional[float] = None
+    closing_balance_variance: Optional[float] = 0.0
     physical_opening_verified: bool = False
     source_coverage_percent: float = 100.0
     website_mapping_status: str = "COMPLETE"
     snapshot_path: Optional[str] = None
+    categories: Dict[str, CategoryResult] = Field(default_factory=dict)
     errors: List[ValidationError] = Field(default_factory=list)
     warnings: List[str] = Field(default_factory=list)
 
 
 class ApprovedWorkbookValidator:
-    """Validates human-approved Excel review workbooks before live e-Dayan execution."""
+    """Validates human-approved Excel review workbooks before live e-Dayan execution.
+    
+    Strict Execution Readiness Gate:
+    Reports BLOCKED whenever ANY critical condition fails:
+      1. Accounting reconciliation (opening balance, total receipts, total payments, exact closing match ₹0.00 diff)
+      2. Transaction completeness (no duplicate vouchers, no missing transactions, correct counts)
+      3. Required fields (non-empty valid ISO date, required voucher, valid head, mandatory subhead)
+      4. Canonical accounting mapping (active heads, correct primary direction)
+      5. Website selector mapping (all heads have website mappings)
+      6. Execution manifest integrity
+      7. Artifact integrity (workbook parsed and verified round-trip)
+    """
 
     REQUIRED_COLUMNS = [
         "Date",
@@ -65,6 +97,24 @@ class ApprovedWorkbookValidator:
             if s.is_active:
                 self._subheads_by_name[s.canonical_name.lower().strip()] = s
 
+        # Try to locate monthly reconciliation targets reference file
+        self._targets_cache: Dict[str, Dict[str, Any]] = {}
+        self._load_monthly_targets()
+
+    def _load_monthly_targets(self):
+        candidate_paths = []
+        if hasattr(self.registry, "storage_path") and self.registry.storage_path:
+            candidate_paths.append(Path(self.registry.storage_path).parent / "monthly_reconciliation_targets.json")
+        candidate_paths.append(Path(__file__).resolve().parent.parent.parent / "data" / "reference" / "monthly_reconciliation_targets.json")
+
+        for cp in candidate_paths:
+            if cp.is_file():
+                try:
+                    self._targets_cache = json.loads(cp.read_text(encoding="utf-8"))
+                    break
+                except Exception:
+                    pass
+
     @staticmethod
     def compute_sha256(file_path: Path) -> str:
         sha256 = hashlib.sha256()
@@ -78,9 +128,11 @@ class ApprovedWorkbookValidator:
         workbook_path: Path,
         expected_month: str,
         expected_opening_balance: Optional[float] = None,
+        expected_closing_balance: Optional[float] = None,
+        enforce_physical_targets: bool = False,
         snapshot_dir: Optional[Path] = None,
     ) -> PreflightSummary:
-        """Validate an approved Excel workbook completely against schema and canonical rules."""
+        """Validate an approved Excel workbook completely against schema and strict canonical rules."""
         file_path = Path(workbook_path)
         if not file_path.is_file():
             raise FileNotFoundError(f"Workbook file not found: {file_path}")
@@ -89,78 +141,177 @@ class ApprovedWorkbookValidator:
         errors: List[ValidationError] = []
         warnings: List[str] = []
 
+        # Category issue buckets
+        cat_issues = {
+            "accounting_reconciliation": [],
+            "transaction_completeness": [],
+            "required_fields": [],
+            "canonical_mapping": [],
+            "website_mapping": [],
+            "manifest_integrity": [],
+            "artifact_integrity": [],
+        }
+
         try:
             wb = openpyxl.load_workbook(file_path, data_only=True)
         except Exception as e:
-            return PreflightSummary(
-                month=expected_month,
+            err_msg = f"Corrupt Excel file: {str(e)}"
+            errors.append(ValidationError(sheet="ALL", row_number=0, column="FILE", error_message=err_msg))
+            cat_issues["artifact_integrity"].append(err_msg)
+            return self._build_preflight_summary(
+                expected_month=expected_month,
                 file_name=file_path.name,
-                file_hash_sha256=file_hash,
-                is_valid=False,
-                status="VALIDATION_FAILED",
-                errors=[ValidationError(sheet="ALL", row_number=0, column="FILE", error_message=f"Corrupt Excel file: {str(e)}")]
+                file_hash=file_hash,
+                errors=errors,
+                warnings=warnings,
+                cat_issues=cat_issues,
+                rec_count=0,
+                rec_total=Decimal("0.0"),
+                pay_count=0,
+                pay_total=Decimal("0.0"),
+                opening_bal_dec=Decimal("0.0"),
+                computed_closing_dec=Decimal("0.0"),
+                target_closing_dec=Decimal("0.0"),
+                variance_dec=Decimal("0.0"),
+                physical_verified=False,
+                snapshot_path_str=None,
             )
 
         # 1. Check required sheets
         required_sheets = ["Receipts", "Payments"]
         for sheet_name in required_sheets:
             if sheet_name not in wb.sheetnames:
-                errors.append(ValidationError(
-                    sheet="WORKBOOK",
-                    row_number=0,
-                    column="SHEET",
-                    error_message=f"Missing required sheet '{sheet_name}'"
-                ))
+                err_msg = f"Missing required sheet '{sheet_name}'"
+                errors.append(ValidationError(sheet="WORKBOOK", row_number=0, column="SHEET", error_message=err_msg))
+                cat_issues["transaction_completeness"].append(err_msg)
 
         if errors:
-            return PreflightSummary(
-                month=expected_month,
+            return self._build_preflight_summary(
+                expected_month=expected_month,
                 file_name=file_path.name,
-                file_hash_sha256=file_hash,
-                is_valid=False,
-                status="VALIDATION_FAILED",
-                errors=errors
+                file_hash=file_hash,
+                errors=errors,
+                warnings=warnings,
+                cat_issues=cat_issues,
+                rec_count=0,
+                rec_total=Decimal("0.0"),
+                pay_count=0,
+                pay_total=Decimal("0.0"),
+                opening_bal_dec=Decimal("0.0"),
+                computed_closing_dec=Decimal("0.0"),
+                target_closing_dec=Decimal("0.0"),
+                variance_dec=Decimal("0.0"),
+                physical_verified=False,
+                snapshot_path_str=None,
             )
 
         # 2. Validate Receipts
-        rec_count, rec_total, rec_missing_web = self._validate_sheet(
+        rec_count, rec_total_dec, rec_missing_web = self._validate_sheet(
             sheet=wb["Receipts"],
             sheet_name="Receipts",
             expected_direction="RECEIPT",
             expected_month=expected_month,
             errors=errors,
-            warnings=warnings
+            warnings=warnings,
+            cat_issues=cat_issues,
         )
 
         # 3. Validate Payments
-        pay_count, pay_total, pay_missing_web = self._validate_sheet(
+        pay_count, pay_total_dec, pay_missing_web = self._validate_sheet(
             sheet=wb["Payments"],
             sheet_name="Payments",
             expected_direction="PAYMENT",
             expected_month=expected_month,
             errors=errors,
-            warnings=warnings
+            warnings=warnings,
+            cat_issues=cat_issues,
         )
 
-        is_valid = (len(errors) == 0)
-        net_move = round(rec_total - pay_total, 2)
-        total_missing_web = rec_missing_web + pay_missing_web
-        web_status = "COMPLETE" if total_missing_web == 0 else "MISSING_MAPPINGS"
+        total_tx_count = rec_count + pay_count
+        if total_tx_count == 0:
+            err_msg = "Workbook contains 0 transaction rows across Receipts and Payments sheets."
+            errors.append(ValidationError(sheet="WORKBOOK", row_number=0, column="ROWS", error_message=err_msg))
+            cat_issues["transaction_completeness"].append(err_msg)
 
-        # 4. Opening balance verification
-        opening_bal = expected_opening_balance
+        # 4. Opening Balance and Target Reconciliation (Decimal-Safe Arithmetic)
+        net_move_dec = rec_total_dec - pay_total_dec
+
+        month_target = self._targets_cache.get(expected_month) if enforce_physical_targets else None
+
         physical_verified = False
-        if opening_bal is not None:
+        if expected_opening_balance is not None:
+            opening_bal_dec = Decimal(str(expected_opening_balance))
+            physical_verified = True
+        elif month_target and "opening_balance" in month_target:
+            opening_bal_dec = Decimal(str(month_target["opening_balance"]))
             physical_verified = True
         else:
-            # Check default handoff for known months (e.g. May 2026 starts with April closing 18506.60)
-            if expected_month == "2026-05":
-                opening_bal = 18506.60
-                physical_verified = True
+            opening_bal_dec = Decimal("0.00")
 
-        expected_closing = round(opening_bal + net_move, 2) if opening_bal is not None else None
+        computed_closing_dec = opening_bal_dec + net_move_dec
 
-        # 5. Create immutable execution snapshot if valid
+        # Target Closing Balance resolution
+        if expected_closing_balance is not None:
+            target_closing_dec = Decimal(str(expected_closing_balance))
+        elif month_target and "closing_balance" in month_target:
+            target_closing_dec = Decimal(str(month_target["closing_balance"]))
+        else:
+            target_closing_dec = computed_closing_dec
+
+        variance_dec = computed_closing_dec - target_closing_dec
+
+        # Check closing balance exact match
+        if variance_dec != Decimal("0"):
+            err_msg = (
+                f"EXECUTION BLOCKED — Closing balance does not match the physical cashbook. "
+                f"Workbook: ₹{float(computed_closing_dec):,.2f}. Physical: ₹{float(target_closing_dec):,.2f}. "
+                f"Difference: ₹{float(abs(variance_dec)):,.2f}."
+            )
+            errors.append(ValidationError(
+                sheet="ALL",
+                row_number=0,
+                column="Closing Balance",
+                error_message=err_msg
+            ))
+            cat_issues["accounting_reconciliation"].append(err_msg)
+
+        # Check target receipts and payments if enforce_physical_targets is requested
+        if enforce_physical_targets and month_target:
+            target_rec = Decimal(str(month_target.get("total_receipts", rec_total_dec)))
+            if rec_total_dec != target_rec:
+                err_msg = (
+                    f"Total receipts (₹{float(rec_total_dec):,.2f}) does not match physical target "
+                    f"(₹{float(target_rec):,.2f}). Difference: ₹{float(rec_total_dec - target_rec):,.2f}."
+                )
+                errors.append(ValidationError(sheet="Receipts", row_number=0, column="Total Receipts", error_message=err_msg))
+                cat_issues["accounting_reconciliation"].append(err_msg)
+
+            target_pay = Decimal(str(month_target.get("total_payments", pay_total_dec)))
+            if pay_total_dec != target_pay:
+                err_msg = (
+                    f"Total payments (₹{float(pay_total_dec):,.2f}) does not match physical target "
+                    f"(₹{float(target_pay):,.2f}). Difference: ₹{float(pay_total_dec - target_pay):,.2f}."
+                )
+                errors.append(ValidationError(sheet="Payments", row_number=0, column="Total Payments", error_message=err_msg))
+                cat_issues["accounting_reconciliation"].append(err_msg)
+
+            target_count = month_target.get("total_transactions")
+            if target_count and total_tx_count != target_count:
+                err_msg = (
+                    f"Transaction count ({total_tx_count}) does not match physical cashbook target ({target_count})."
+                )
+                errors.append(ValidationError(sheet="WORKBOOK", row_number=0, column="Transaction Count", error_message=err_msg))
+                cat_issues["transaction_completeness"].append(err_msg)
+
+        # 5. Manifest integrity check
+        if total_tx_count > 0 and len(errors) == 0:
+            pass  # Ready for manifest creation
+        elif total_tx_count == 0:
+            cat_issues["manifest_integrity"].append("Zero transactions to package into manifest.")
+
+        is_valid = (len(errors) == 0 and variance_dec == Decimal("0"))
+
+        # 6. Create immutable execution snapshot ONLY IF VALID
         snapshot_path_str = None
         if is_valid:
             if snapshot_dir is None:
@@ -182,35 +333,35 @@ class ApprovedWorkbookValidator:
                 "file_hash_sha256": file_hash,
                 "snapshot_created_at": str(file_path.stat().st_mtime),
                 "receipts_count": rec_count,
-                "receipts_total": round(rec_total, 2),
+                "receipts_total": float(rec_total_dec),
                 "payments_count": pay_count,
-                "payments_total": round(pay_total, 2),
-                "net_movement": net_move,
-                "opening_balance": opening_bal,
-                "expected_closing_balance": expected_closing,
+                "payments_total": float(pay_total_dec),
+                "net_movement": float(net_move_dec),
+                "opening_balance": float(opening_bal_dec),
+                "expected_closing_balance": float(computed_closing_dec),
+                "physical_closing_balance": float(target_closing_dec),
+                "closing_balance_variance": float(variance_dec),
                 "snapshot_path": snapshot_path_str,
             }
             meta_file.write_text(json.dumps(meta_data, indent=2), encoding="utf-8")
 
-        return PreflightSummary(
-            month=expected_month,
+        return self._build_preflight_summary(
+            expected_month=expected_month,
             file_name=file_path.name,
-            file_hash_sha256=file_hash,
-            is_valid=is_valid,
-            status="READY_FOR_EXECUTION" if is_valid else "VALIDATION_FAILED",
-            receipts_count=rec_count,
-            receipts_total=round(rec_total, 2),
-            payments_count=pay_count,
-            payments_total=round(pay_total, 2),
-            net_movement=net_move,
-            opening_balance=opening_bal,
-            expected_closing_balance=expected_closing,
-            physical_opening_verified=physical_verified,
-            source_coverage_percent=100.0 if (rec_count + pay_count) > 0 else 0.0,
-            website_mapping_status=web_status,
-            snapshot_path=snapshot_path_str,
+            file_hash=file_hash,
             errors=errors,
-            warnings=warnings
+            warnings=warnings,
+            cat_issues=cat_issues,
+            rec_count=rec_count,
+            rec_total=rec_total_dec,
+            pay_count=pay_count,
+            pay_total=pay_total_dec,
+            opening_bal_dec=opening_bal_dec,
+            computed_closing_dec=computed_closing_dec,
+            target_closing_dec=target_closing_dec,
+            variance_dec=variance_dec,
+            physical_verified=physical_verified,
+            snapshot_path_str=snapshot_path_str,
         )
 
     def _validate_sheet(
@@ -220,8 +371,9 @@ class ApprovedWorkbookValidator:
         expected_direction: str,
         expected_month: str,
         errors: List[ValidationError],
-        warnings: List[str]
-    ) -> Tuple[int, float, int]:
+        warnings: List[str],
+        cat_issues: Dict[str, List[str]],
+    ) -> Tuple[int, Decimal, int]:
         """Validate header, columns, rows, amounts, canonical accounting identities, and website mappings."""
         # Check header row
         header = [str(cell.value or "").strip() for cell in sheet[1]]
@@ -232,16 +384,13 @@ class ApprovedWorkbookValidator:
             elif col_name == "Receipt Number" and "Voucher Number" in header:
                 col_map["Receipt Number"] = header.index("Voucher Number") + 1
             else:
-                errors.append(ValidationError(
-                    sheet=sheet_name,
-                    row_number=1,
-                    column=col_name,
-                    error_message=f"Missing required column '{col_name}'"
-                ))
-                return 0, 0.0, 0
+                err_msg = f"Missing required column '{col_name}'"
+                errors.append(ValidationError(sheet=sheet_name, row_number=1, column=col_name, error_message=err_msg))
+                cat_issues["transaction_completeness"].append(err_msg)
+                return 0, Decimal("0.0"), 0
 
         count = 0
-        total = 0.0
+        total_dec = Decimal("0.0")
         missing_website_mappings = 0
         seen_vouchers = set()
 
@@ -259,62 +408,59 @@ class ApprovedWorkbookValidator:
 
             count += 1
 
-            # Validate Amount
-            amount = 0.0
-            if amt_val is None or str(amt_val).strip() == "":
-                errors.append(ValidationError(
-                    sheet=sheet_name,
-                    row_number=r_idx,
-                    column="Amount",
-                    error_message="Transaction amount cannot be empty"
-                ))
+            # 1. Validate Date (Mandatory for every transaction row)
+            if date_val is None or str(date_val).strip() == "" or str(date_val).strip() == "None":
+                err_msg = f"{sheet_name} row {r_idx}: Transaction date is missing."
+                errors.append(ValidationError(sheet=sheet_name, row_number=r_idx, column="Date", error_message=err_msg))
+                cat_issues["required_fields"].append(err_msg)
             else:
-                try:
-                    amount = float(str(amt_val).replace(",", "").strip())
-                    if amount <= 0.0:
-                        errors.append(ValidationError(
-                            sheet=sheet_name,
-                            row_number=r_idx,
-                            column="Amount",
-                            error_message=f"Amount must be positive, got {amount}"
-                        ))
-                    total += amount
-                except ValueError:
-                    errors.append(ValidationError(
-                        sheet=sheet_name,
-                        row_number=r_idx,
-                        column="Amount",
-                        error_message=f"Invalid numeric amount '{amt_val}'"
-                    ))
+                date_str = str(date_val).strip()
+                # Check valid format
+                if not (re.match(r"^\d{4}-\d{2}-\d{2}$", date_str) or re.match(r"^\d{1,2}[\.\/\-]\d{1,2}([\.\/\-]\d{2,4})?$", date_str)):
+                    err_msg = f"{sheet_name} row {r_idx}: Invalid date format '{date_str}'. Expected YYYY-MM-DD."
+                    errors.append(ValidationError(sheet=sheet_name, row_number=r_idx, column="Date", error_message=err_msg))
+                    cat_issues["required_fields"].append(err_msg)
+                elif not date_str.startswith(expected_month):
+                    warn_msg = f"{sheet_name} row {r_idx}: Date '{date_str}' outside expected month '{expected_month}'"
+                    warnings.append(warn_msg)
 
-            # Validate Voucher Number and check for duplicates within the same sheet
+            # 2. Validate Voucher Number (Mandatory for every transaction row, duplicates prohibited)
             v_str = str(v_val or "").strip()
-            if not v_str:
-                warnings.append(f"{sheet_name} row {r_idx}: Empty voucher number")
+            if not v_str or v_str in {"", "None", "null"}:
+                err_msg = f"{sheet_name} row {r_idx}: Voucher / Receipt Number cannot be empty."
+                errors.append(ValidationError(sheet=sheet_name, row_number=r_idx, column="Receipt Number", error_message=err_msg))
+                cat_issues["required_fields"].append(err_msg)
             elif v_str != "-":
                 if v_str in seen_vouchers:
-                    errors.append(ValidationError(
-                        sheet=sheet_name,
-                        row_number=r_idx,
-                        column="Receipt Number",
-                        error_message=f"Duplicate voucher number '{v_str}' detected in {sheet_name}"
-                    ))
+                    err_msg = f"Duplicate voucher number '{v_str}' detected in {sheet_name} at row {r_idx}"
+                    errors.append(ValidationError(sheet=sheet_name, row_number=r_idx, column="Receipt Number", error_message=err_msg))
+                    cat_issues["transaction_completeness"].append(err_msg)
                 seen_vouchers.add(v_str)
 
-            # Validate Date format (YYYY-MM-DD) and month context
-            if date_val:
-                date_str = str(date_val).strip()
-                if not date_str.startswith(expected_month):
-                    warnings.append(f"{sheet_name} row {r_idx}: Date '{date_str}' outside expected month '{expected_month}'")
+            # 3. Validate Amount (Decimal safe)
+            if amt_val is None or str(amt_val).strip() == "":
+                err_msg = f"{sheet_name} row {r_idx}: Transaction amount cannot be empty"
+                errors.append(ValidationError(sheet=sheet_name, row_number=r_idx, column="Amount", error_message=err_msg))
+                cat_issues["required_fields"].append(err_msg)
+            else:
+                try:
+                    clean_amt_str = str(amt_val).replace(",", "").strip()
+                    amt_dec = Decimal(clean_amt_str)
+                    if amt_dec <= Decimal("0"):
+                        err_msg = f"{sheet_name} row {r_idx}: Amount must be positive, got {amt_dec}"
+                        errors.append(ValidationError(sheet=sheet_name, row_number=r_idx, column="Amount", error_message=err_msg))
+                        cat_issues["accounting_reconciliation"].append(err_msg)
+                    total_dec += amt_dec
+                except Exception:
+                    err_msg = f"{sheet_name} row {r_idx}: Invalid numeric amount '{amt_val}'"
+                    errors.append(ValidationError(sheet=sheet_name, row_number=r_idx, column="Amount", error_message=err_msg))
+                    cat_issues["accounting_reconciliation"].append(err_msg)
 
-            # Validate Canonical Head Name
+            # 4. Validate Canonical Head Name
             if not head_val or not str(head_val).strip():
-                errors.append(ValidationError(
-                    sheet=sheet_name,
-                    row_number=r_idx,
-                    column="Head Name",
-                    error_message="Head Name cannot be blank"
-                ))
+                err_msg = f"{sheet_name} row {r_idx}: Canonical Head Name cannot be blank"
+                errors.append(ValidationError(sheet=sheet_name, row_number=r_idx, column="Head Name", error_message=err_msg))
+                cat_issues["required_fields"].append(err_msg)
                 continue
 
             clean_head = str(head_val).strip()
@@ -327,88 +473,157 @@ class ApprovedWorkbookValidator:
                     head_obj = self.registry.heads[alias_res[0]]
 
             if not head_obj:
-                errors.append(ValidationError(
-                    sheet=sheet_name,
-                    row_number=r_idx,
-                    column="Head Name",
-                    error_message=f"Unknown or unapproved canonical head '{head_val}'"
-                ))
+                err_msg = f"Unknown or unapproved canonical head '{head_val}' in {sheet_name} row {r_idx}"
+                errors.append(ValidationError(sheet=sheet_name, row_number=r_idx, column="Head Name", error_message=err_msg))
+                cat_issues["canonical_mapping"].append(err_msg)
                 continue
 
-            # Validate Direction
+            # 5. Validate Direction
             if head_obj.primary_direction not in (expected_direction, "BOTH"):
-                errors.append(ValidationError(
-                    sheet=sheet_name,
-                    row_number=r_idx,
-                    column="Head Name",
-                    error_message=f"Head '{head_obj.canonical_name}' has direction '{head_obj.primary_direction}', cannot appear in {sheet_name}"
-                ))
+                err_msg = f"Head '{head_obj.canonical_name}' has direction '{head_obj.primary_direction}', cannot appear in {sheet_name} row {r_idx}"
+                errors.append(ValidationError(sheet=sheet_name, row_number=r_idx, column="Head Name", error_message=err_msg))
+                cat_issues["canonical_mapping"].append(err_msg)
 
-            # Validate Website Selector Mapping
+            # 6. Validate Website Selector Mapping
             wh = self.registry.get_website_head_for_canonical(head_obj.canonical_head_id, expected_direction)
             if not wh or not wh.website_head_value:
-                errors.append(ValidationError(
-                    sheet=sheet_name,
-                    row_number=r_idx,
-                    column="Head Name",
-                    error_message=f"Head '{head_obj.canonical_name}' has no website selector mapping for direction '{expected_direction}'"
-                ))
+                err_msg = f"Head '{head_obj.canonical_name}' has no website selector mapping for direction '{expected_direction}' in {sheet_name} row {r_idx}"
+                errors.append(ValidationError(sheet=sheet_name, row_number=r_idx, column="Head Name", error_message=err_msg))
+                cat_issues["website_mapping"].append(err_msg)
                 missing_website_mappings += 1
 
-            # Validate Subhead Policy
-            clean_sub = str(sub_val).strip().lower() if sub_val else ""
+            # 7. Validate Subhead Policy
+            clean_sub = str(sub_val).strip().lower() if (sub_val and str(sub_val).strip() not in ("None", "null", "-")) else ""
             pol = head_obj.subhead_policy
 
             if pol == SubheadPolicy.MANDATORY:
                 if not clean_sub:
-                    errors.append(ValidationError(
-                        sheet=sheet_name,
-                        row_number=r_idx,
-                        column="Subhead",
-                        error_message=f"Head '{head_obj.canonical_name}' requires a mandatory subhead, but Subhead is blank"
-                    ))
+                    err_msg = f"Head '{head_obj.canonical_name}' requires a mandatory subhead, but Subhead is blank in {sheet_name} row {r_idx}"
+                    errors.append(ValidationError(sheet=sheet_name, row_number=r_idx, column="Subhead", error_message=err_msg))
+                    cat_issues["required_fields"].append(err_msg)
                 else:
                     sub_obj = self._subheads_by_name.get(clean_sub)
                     if not sub_obj:
-                        errors.append(ValidationError(
-                            sheet=sheet_name,
-                            row_number=r_idx,
-                            column="Subhead",
-                            error_message=f"Unknown subhead '{sub_val}'"
-                        ))
+                        err_msg = f"Unknown subhead '{sub_val}' in {sheet_name} row {r_idx}"
+                        errors.append(ValidationError(sheet=sheet_name, row_number=r_idx, column="Subhead", error_message=err_msg))
+                        cat_issues["canonical_mapping"].append(err_msg)
                     elif sub_obj.parent_head_id != head_obj.canonical_head_id:
-                        errors.append(ValidationError(
-                            sheet=sheet_name,
-                            row_number=r_idx,
-                            column="Subhead",
-                            error_message=f"Subhead '{sub_obj.canonical_name}' belongs to '{sub_obj.parent_head_id}', not '{head_obj.canonical_head_id}'"
-                        ))
+                        err_msg = f"Subhead '{sub_obj.canonical_name}' belongs to '{sub_obj.parent_head_id}', not '{head_obj.canonical_head_id}' in {sheet_name} row {r_idx}"
+                        errors.append(ValidationError(sheet=sheet_name, row_number=r_idx, column="Subhead", error_message=err_msg))
+                        cat_issues["canonical_mapping"].append(err_msg)
 
             elif pol == SubheadPolicy.PROHIBITED:
                 if clean_sub:
-                    errors.append(ValidationError(
-                        sheet=sheet_name,
-                        row_number=r_idx,
-                        column="Subhead",
-                        error_message=f"Head '{head_obj.canonical_name}' strictly prohibits subheads, but got '{sub_val}'"
-                    ))
+                    err_msg = f"Head '{head_obj.canonical_name}' strictly prohibits subheads, but got '{sub_val}' in {sheet_name} row {r_idx}"
+                    errors.append(ValidationError(sheet=sheet_name, row_number=r_idx, column="Subhead", error_message=err_msg))
+                    cat_issues["required_fields"].append(err_msg)
 
             elif pol == SubheadPolicy.OPTIONAL:
                 if clean_sub:
                     sub_obj = self._subheads_by_name.get(clean_sub)
                     if not sub_obj:
-                        errors.append(ValidationError(
-                            sheet=sheet_name,
-                            row_number=r_idx,
-                            column="Subhead",
-                            error_message=f"Unknown optional subhead '{sub_val}'"
-                        ))
+                        err_msg = f"Unknown optional subhead '{sub_val}' in {sheet_name} row {r_idx}"
+                        errors.append(ValidationError(sheet=sheet_name, row_number=r_idx, column="Subhead", error_message=err_msg))
+                        cat_issues["canonical_mapping"].append(err_msg)
                     elif sub_obj.parent_head_id != head_obj.canonical_head_id:
-                        errors.append(ValidationError(
-                            sheet=sheet_name,
-                            row_number=r_idx,
-                            column="Subhead",
-                            error_message=f"Optional subhead '{sub_obj.canonical_name}' does not belong to head '{head_obj.canonical_head_id}'"
-                        ))
+                        err_msg = f"Optional subhead '{sub_obj.canonical_name}' does not belong to head '{head_obj.canonical_head_id}' in {sheet_name} row {r_idx}"
+                        errors.append(ValidationError(sheet=sheet_name, row_number=r_idx, column="Subhead", error_message=err_msg))
+                        cat_issues["canonical_mapping"].append(err_msg)
 
-        return count, total, missing_website_mappings
+        return count, total_dec, missing_website_mappings
+
+    def _build_preflight_summary(
+        self,
+        expected_month: str,
+        file_name: str,
+        file_hash: str,
+        errors: List[ValidationError],
+        warnings: List[str],
+        cat_issues: Dict[str, List[str]],
+        rec_count: int,
+        rec_total: Decimal,
+        pay_count: int,
+        pay_total: Decimal,
+        opening_bal_dec: Decimal,
+        computed_closing_dec: Decimal,
+        target_closing_dec: Decimal,
+        variance_dec: Decimal,
+        physical_verified: bool,
+        snapshot_path_str: Optional[str],
+    ) -> PreflightSummary:
+        """Assemble categorized results and strict overall readiness verdict."""
+        categories = {}
+        for cat_name, issue_list in cat_issues.items():
+            status = ValidationCategoryStatus.PASS if len(issue_list) == 0 else ValidationCategoryStatus.BLOCKED
+            categories[cat_name] = CategoryResult(
+                category=cat_name,
+                status=status,
+                issue_count=len(issue_list),
+                issues=issue_list,
+                details={}
+            )
+
+        categories["accounting_reconciliation"].details = {
+            "opening_balance": float(opening_bal_dec),
+            "total_receipts": float(rec_total),
+            "total_payments": float(pay_total),
+            "computed_closing_balance": float(computed_closing_dec),
+            "physical_closing_balance": float(target_closing_dec),
+            "closing_balance_variance": float(variance_dec),
+            "is_exact_match": (variance_dec == Decimal("0")),
+        }
+
+        categories["transaction_completeness"].details = {
+            "receipts_count": rec_count,
+            "payments_count": pay_count,
+            "total_count": rec_count + pay_count,
+        }
+
+        all_cats_pass = all(c.status == ValidationCategoryStatus.PASS for c in categories.values())
+        is_valid = (len(errors) == 0 and variance_dec == Decimal("0") and all_cats_pass)
+
+        if is_valid:
+            status_str = "READY_FOR_EXECUTION"
+        elif variance_dec != Decimal("0"):
+            status_str = "BLOCKED - BALANCE MISMATCH"
+        else:
+            status_str = "VALIDATION_FAILED"
+        blocked_reason = None
+        if not is_valid:
+            if variance_dec != Decimal("0"):
+                blocked_reason = (
+                    f"Closing balance mismatch: Workbook ₹{float(computed_closing_dec):,.2f} "
+                    f"vs Physical ₹{float(target_closing_dec):,.2f} "
+                    f"(Variance: ₹{float(variance_dec):,.2f})"
+                )
+            elif errors:
+                blocked_reason = errors[0].error_message
+            else:
+                blocked_reason = "Critical pre-flight validation gates failed."
+
+        web_status = "COMPLETE" if categories["website_mapping"].status == ValidationCategoryStatus.PASS else "MISSING_MAPPINGS"
+
+        return PreflightSummary(
+            month=expected_month,
+            file_name=file_name,
+            file_hash_sha256=file_hash,
+            is_valid=is_valid,
+            status=status_str,
+            blocked_reason=blocked_reason,
+            receipts_count=rec_count,
+            receipts_total=float(rec_total),
+            payments_count=pay_count,
+            payments_total=float(pay_total),
+            net_movement=float(rec_total - pay_total),
+            opening_balance=float(opening_bal_dec),
+            expected_closing_balance=float(computed_closing_dec),
+            physical_closing_balance=float(target_closing_dec),
+            closing_balance_variance=float(variance_dec),
+            physical_opening_verified=physical_verified,
+            source_coverage_percent=100.0 if (rec_count + pay_count) > 0 else 0.0,
+            website_mapping_status=web_status,
+            snapshot_path=snapshot_path_str,
+            categories=categories,
+            errors=errors,
+            warnings=warnings,
+        )

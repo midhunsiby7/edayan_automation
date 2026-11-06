@@ -34,6 +34,15 @@ class ReviewAction(str, Enum):
     EDIT = "EDIT"                # User edited one or more transaction fields
 
 
+class HumanVerificationStatus(str, Enum):
+    """Human verification status, kept strictly separate from machine mapping confidence."""
+    PENDING = "PENDING"                    # Awaiting explicit human inspection and confirmation
+    HUMAN_VERIFIED = "HUMAN_VERIFIED"      # Explicitly confirmed by human reviewer
+    HUMAN_CORRECTED = "HUMAN_CORRECTED"    # Edited or overridden by human, pending final confirmation
+    REJECTED = "REJECTED"                  # Explicitly rejected by human reviewer
+    DEFERRED = "DEFERRED"                  # Explicitly deferred by human reviewer
+
+
 class ReviewItem(BaseModel):
     """Rich presentation model for a transaction requiring or having undergone review."""
     transaction_id: str
@@ -61,6 +70,9 @@ class ReviewItem(BaseModel):
     evidence: str = ""
     candidate_alternatives: List[Dict[str, Any]] = Field(default_factory=list)
     needs_human_review: bool = True
+
+    # Human verification status (strictly decoupled from machine mapping status)
+    human_verification_status: HumanVerificationStatus = HumanVerificationStatus.PENDING
 
     # User review decision
     review_action: Optional[ReviewAction] = None
@@ -121,16 +133,23 @@ class ReviewManager:
             r_vouch = raw_row.raw_voucher_number
 
         # Resolve formatted date if possible
-        resolved_date = r_date
-        if r_date and re.match(r"^\d{1,2}[\.\/\-]\d{1,2}([\.\/\-]\d{2,4})?$", str(r_date)):
-            parts = re.split(r"[\.\/\-]", str(r_date))
-            if len(parts) >= 3:
-                day = int(parts[0])
-                month = int(parts[1])
-                yr = int(parts[2])
-                if yr < 100:
-                    yr += 2000
-                resolved_date = f"{yr:04d}-{month:02d}-{day:02d}"
+        resolved_date = None
+        if r_date:
+            clean_date = re.sub(r"\s+", "", str(r_date).strip())
+            if re.match(r"^\d{4}-\d{2}-\d{2}$", clean_date):
+                resolved_date = clean_date
+            elif re.search(r"\d{1,2}[\.\/\-]\d{1,2}([\.\/\-]\d{2,4})?", clean_date):
+                parts = [p for p in re.split(r"[\.\/\-]", clean_date) if p]
+                if len(parts) >= 3 and parts[0].isdigit() and parts[1].isdigit() and parts[2].isdigit():
+                    day = int(parts[0])
+                    month = int(parts[1])
+                    yr = int(parts[2])
+                    if yr < 100:
+                        yr += 2000
+                    if 1 <= month <= 12 and 1 <= day <= 31:
+                        resolved_date = f"{yr:04d}-{month:02d}-{day:02d}"
+            if not resolved_date:
+                resolved_date = clean_date
 
         orig_data = {
             "date": resolved_date or r_date,
@@ -228,7 +247,8 @@ class ReviewManager:
         confirmed_head_id: Optional[str] = None,
         confirmed_subhead_id: Optional[str] = None,
         notes: str = "",
-        promote_to_alias: bool = False
+        promote_to_alias: bool = False,
+        validate_required: bool = False
     ) -> ReviewItem:
         """Apply human decision, transitioning mapping status to VERIFIED or UNRESOLVED."""
         item.review_action = action
@@ -237,9 +257,21 @@ class ReviewManager:
         item.review_notes = notes
 
         if action == ReviewAction.CONFIRM:
-            # User confirmed the suggested/provisional mapping
-            item.confirmed_head_id = item.canonical_head_id
-            item.confirmed_subhead_id = item.canonical_subhead_id
+            if validate_required:
+                # Validate required fields before allowing human confirmation
+                if not item.date or not str(item.date).strip():
+                    raise ValueError(f"Cannot confirm transaction {item.transaction_id}: Date is missing.")
+                if not item.canonical_head_id or not self.registry.get_head(item.canonical_head_id):
+                    raise ValueError(f"Cannot confirm transaction {item.transaction_id}: Canonical accounting head is missing or invalid.")
+                head_obj = self.registry.get_head(item.canonical_head_id)
+                if head_obj and head_obj.subhead_policy == SubheadPolicy.MANDATORY and not item.canonical_subhead_id:
+                    raise ValueError(f"Cannot confirm transaction {item.transaction_id}: Head '{head_obj.canonical_name}' requires a mandatory subhead.")
+                if head_obj and head_obj.subhead_policy == SubheadPolicy.PROHIBITED and item.canonical_subhead_id:
+                    raise ValueError(f"Cannot confirm transaction {item.transaction_id}: Head '{head_obj.canonical_name}' strictly prohibits subheads.")
+
+            item.confirmed_head_id = confirmed_head_id or item.canonical_head_id
+            item.confirmed_subhead_id = confirmed_subhead_id or item.canonical_subhead_id
+            item.human_verification_status = HumanVerificationStatus.HUMAN_VERIFIED
             item.mapping_status = MappingStatus.VERIFIED
             item.needs_human_review = False
             item.evidence = f"Human verified by {reviewed_by} at {timestamp}: {notes}"
@@ -259,9 +291,14 @@ class ReviewManager:
                 item.canonical_subhead_id = sub_obj.canonical_subhead_id if sub_obj else None
                 item.canonical_subhead_name = sub_obj.canonical_name if sub_obj else None
                 item.confirmed_subhead_id = item.canonical_subhead_id
+            else:
+                item.canonical_subhead_id = None
+                item.canonical_subhead_name = None
+                item.confirmed_subhead_id = None
 
-            item.mapping_status = MappingStatus.VERIFIED
-            item.needs_human_review = False
+            # Distinct operation: Override keeps transaction awaiting human confirmation
+            item.human_verification_status = HumanVerificationStatus.HUMAN_CORRECTED
+            item.needs_human_review = True
             item.evidence = f"Human override by {reviewed_by} to {confirmed_head_id} at {timestamp}: {notes}"
 
         elif action == ReviewAction.REJECT:
@@ -270,11 +307,15 @@ class ReviewManager:
             item.canonical_head_name = None
             item.canonical_subhead_id = None
             item.canonical_subhead_name = None
+            item.confirmed_head_id = None
+            item.confirmed_subhead_id = None
             item.mapping_status = MappingStatus.UNRESOLVED
+            item.human_verification_status = HumanVerificationStatus.REJECTED
             item.needs_human_review = True
             item.evidence = f"Suggestion rejected by {reviewed_by} at {timestamp}: {notes}"
 
         elif action == ReviewAction.DEFER:
+            item.human_verification_status = HumanVerificationStatus.DEFERRED
             item.needs_human_review = True
             item.evidence = f"Deferred by {reviewed_by} at {timestamp}: {notes}"
 
@@ -423,9 +464,10 @@ class ReviewManager:
         item.raw_narration = narration.strip()
         item.direction = dir_clean
 
-        # User requirement 1.5:
-        # "saving an edit is NOT equivalent to approving the transaction.
-        # The edited transaction must remain awaiting explicit confirmation."
+        # User requirement:
+        # Saving an edit is NOT equivalent to approving the transaction.
+        # The edited transaction invalidates earlier confirmation and becomes HUMAN_CORRECTED / PENDING.
+        item.human_verification_status = HumanVerificationStatus.HUMAN_CORRECTED
         item.needs_human_review = True
         item.review_action = ReviewAction.EDIT
         item.confirmed_head_id = None

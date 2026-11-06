@@ -10,6 +10,7 @@ import json
 import logging
 import os
 import re
+import shutil
 import urllib.request
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
@@ -754,13 +755,13 @@ def refresh_draft_workbook(month: str = Form(...)):
             source_image=it.source_image,
             source_page=it.source_page,
             source_row=it.source_row,
-            raw_date=None,
-            resolved_date=None,
+            raw_date=it.raw_date or it.date,
+            resolved_date=it.date or it.raw_date,
             raw_head_number=it.raw_head_number,
             accounting_head_name=it.canonical_head_name,
             subhead=it.canonical_subhead_name,
-            raw_voucher_number=it.raw_voucher_number,
-            voucher_number=it.raw_voucher_number,
+            raw_voucher_number=it.voucher_number or it.raw_voucher_number,
+            voucher_number=it.voucher_number or it.raw_voucher_number,
             raw_narration=it.raw_narration,
             narration_english=it.english_narration,
             raw_amount=str(it.amount) if it.amount is not None else None,
@@ -810,6 +811,8 @@ def download_draft_workbook(month: str):
 @app.post("/api/upload-approved")
 async def upload_approved_workbook(
     month: str = Form(...),
+    target_closing_balance: Optional[float] = Form(None),
+    enforce_physical_targets: bool = Form(False),
     file: UploadFile = File(...),
 ):
     """Upload human-approved Excel workbook, validate structure, canonical rules, and emit preflight report."""
@@ -833,6 +836,8 @@ async def upload_approved_workbook(
     summary: PreflightSummary = approved_validator.validate_workbook(
         workbook_path=staged_path,
         expected_month=month,
+        expected_closing_balance=target_closing_balance,
+        enforce_physical_targets=enforce_physical_targets,
         snapshot_dir=snapshot_dir,
     )
 
@@ -841,6 +846,90 @@ async def upload_approved_workbook(
     preflight_report_file.write_text(json.dumps(summary.model_dump(), indent=2), encoding="utf-8")
 
     return summary.model_dump()
+
+
+@app.post("/api/month/{month}/reset")
+def reset_month_review_data(month: str, force_fresh_ocr: bool = False):
+    """Safely reset May 2026 review data and invalidate old approval/preflight authorization.
+    
+    Strict safety rules:
+      1. Strictly authorized ONLY for month '2026-05'.
+      2. Archives existing generated state (review_state.json, drafts, approved snapshots,
+         intake preflight, manifests, execution journal) into a timestamped directory
+         with an auditable SHA-256 manifest.
+      3. Preserves all original photographs and pages_manifest.json in data/monthly/2026-05/.
+      4. Invalidates old approval / pre-flight authorization.
+      5. Clears active generated review state without auto-starting processing.
+    """
+    _validate_month_format(month)
+    if month != "2026-05":
+        raise HTTPException(status_code=400, detail="Safe reset is strictly restricted to May 2026 (2026-05). Other months cannot be reset.")
+
+    output_dir = DATA_DIR / "output" / month
+    archive_base = DATA_DIR / "archive" / month
+    archive_base.mkdir(parents=True, exist_ok=True)
+    ts = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+    archive_dir = archive_base / f"reset_archive_{ts}"
+    archive_dir.mkdir(parents=True, exist_ok=True)
+
+    archived_files = []
+    file_hashes = {}
+
+    # Copy files to archive with hashes
+    if output_dir.is_dir():
+        for item in output_dir.rglob("*"):
+            if item.is_file():
+                rel_path = item.relative_to(output_dir)
+                dest = archive_dir / rel_path
+                dest.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(item, dest)
+                sha = ApprovedWorkbookValidator.compute_sha256(item)
+                file_hashes[str(rel_path)] = sha
+                archived_files.append(str(rel_path))
+
+    # Archive any relevant job records for this month
+    jobs_dir = DATA_DIR / "jobs"
+    if jobs_dir.is_dir():
+        for jf in jobs_dir.glob("job_202605_*.json"):
+            dest = archive_dir / "jobs" / jf.name
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(jf, dest)
+            sha = ApprovedWorkbookValidator.compute_sha256(jf)
+            file_hashes[f"jobs/{jf.name}"] = sha
+
+    # Save auditable archive manifest
+    archive_manifest = {
+        "month": month,
+        "reset_timestamp_utc": datetime.now(timezone.utc).isoformat(),
+        "archived_file_count": len(archived_files),
+        "files": file_hashes,
+    }
+    (archive_dir / "archive_manifest.json").write_text(json.dumps(archive_manifest, indent=2), encoding="utf-8")
+
+    # Clear active generated output files (preserving directory structure)
+    if output_dir.is_dir():
+        for p in output_dir.iterdir():
+            if p.is_dir():
+                shutil.rmtree(p, ignore_errors=True)
+            elif p.is_file():
+                if force_fresh_ocr or p.name not in ("raw_extractions.json", "raw_extractions_meta.json"):
+                    p.unlink(missing_ok=True)
+
+    (output_dir / "intake").mkdir(parents=True, exist_ok=True)
+    (output_dir / "approved_snapshots").mkdir(parents=True, exist_ok=True)
+    (output_dir / "manifests").mkdir(parents=True, exist_ok=True)
+
+    logger.info(f"Safely reset May 2026 review data. Archived {len(archived_files)} files to {archive_dir.name}.")
+
+    return {
+        "status": "RESET_SUCCESS",
+        "month": month,
+        "archived_directory": str(archive_dir),
+        "archived_count": len(archived_files),
+        "manifest_path": str(archive_dir / "archive_manifest.json"),
+        "photos_preserved": True,
+        "message": "Successfully archived and reset May 2026 generated review state. Photos preserved in Upload & Arrange. Please review and click 'Confirm Pages & Start Processing' when ready.",
+    }
 
 
 @app.get("/api/preflight-summary")

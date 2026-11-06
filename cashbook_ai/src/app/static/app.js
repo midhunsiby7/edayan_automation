@@ -30,6 +30,7 @@ document.addEventListener("DOMContentLoaded", () => {
   setupDropzones();
   setupModals();
   setupExecutionControls();
+  setupMayResetControls();
   fetchStatus();
   loadCanonicalMetadata();
   loadCurrentMonthData();
@@ -136,6 +137,11 @@ async function setupMonthSelector() {
 async function loadCurrentMonthData() {
   document.getElementById("dashActiveMonth").textContent = currentMonth;
   updateDownloadLinks();
+  const isMay = (currentMonth === "2026-05");
+  const btnReview = document.getElementById("btnResetMayReview");
+  if (btnReview) btnReview.style.display = isMay ? "inline-block" : "none";
+  const btnProc = document.getElementById("btnResetMayFromProcessing");
+  if (btnProc) btnProc.style.display = isMay ? "inline-block" : "none";
   await loadPages();
   await loadReviewData();
   await refreshDashboard();
@@ -605,6 +611,31 @@ function renderReviewGroups() {
   });
 }
 
+function isMandatorySubheadMissing(it) {
+  if (!it.canonical_head_id) return false;
+  const headObj = canonicalHeads.find(h => h.id === it.canonical_head_id);
+  if (headObj && (headObj.policy === "MANDATORY" || headObj.subhead_policy === "MANDATORY")) {
+    return !it.canonical_subhead_id;
+  }
+  return false;
+}
+
+function renderHumanVerificationBadge(status) {
+  switch (status) {
+    case "HUMAN_VERIFIED":
+      return `<span class="badge badge-verified" title="Confirmed by Human Auditor">✓ HUMAN VERIFIED</span>`;
+    case "HUMAN_CORRECTED":
+      return `<span class="badge badge-suggested" title="Edited by Human - Pending Confirmation">✎ EDITED (PENDING CONFIRM)</span>`;
+    case "REJECTED":
+      return `<span class="badge badge-danger" title="Rejected by User">✗ REJECTED</span>`;
+    case "DEFERRED":
+      return `<span class="badge badge-secondary" title="Deferred for Auditor Review">⏸ DEFERRED</span>`;
+    case "PENDING":
+    default:
+      return `<span class="badge badge-pending" title="Awaiting Human Verification">⏳ PENDING VERIFICATION</span>`;
+  }
+}
+
 function renderReviewItems() {
   const container = document.getElementById("reviewItemsSection");
   container.innerHTML = "";
@@ -648,17 +679,28 @@ function renderReviewItems() {
 
   filtered.forEach(it => {
     const card = document.createElement("div");
-    card.className = `review-card status-${it.mapping_status.toLowerCase()}`;
+    const isHumanVerified = (it.human_verification_status === "HUMAN_VERIFIED");
+    const isHumanCorrected = (it.human_verification_status === "HUMAN_CORRECTED");
+    const humanClass = isHumanVerified ? "card-human-verified" : (isHumanCorrected ? "card-human-corrected" : "");
+    card.className = `review-card status-${it.mapping_status.toLowerCase()} ${humanClass}`;
 
     const isRec = it.direction === "RECEIPT";
     const dirClass = isRec ? "tx-receipt" : "tx-payment";
     const amtStr = it.amount !== null ? `₹${it.amount.toLocaleString("en-IN", {minimumFractionDigits: 2})}` : "₹0.00";
+    const vouchStr = it.voucher_number || it.raw_voucher_number;
+    const dateStr = it.date || it.raw_date;
+    const missingSubhead = isMandatorySubheadMissing(it);
 
     card.innerHTML = `
       <div class="review-cell-meta">
         <div><strong>Pg ${escapeHtml(it.source_page)}</strong></div>
-        <div>V.# ${escapeHtml(it.raw_voucher_number || "-")}</div>
-        <div>Folio ${escapeHtml(it.raw_head_number || "-")}</div>
+        <div class="meta-date" style="margin-top: 3px;">
+          ${dateStr ? `<span>📅 ${escapeHtml(dateStr)}</span>` : `<span class="badge badge-warning text-xs">DATE MISSING</span>`}
+        </div>
+        <div class="meta-voucher" style="margin-top: 2px;">
+          ${vouchStr ? `<span>V.# ${escapeHtml(vouchStr)}</span>` : `<span class="badge badge-warning text-xs">VOUCHER MISSING</span>`}
+        </div>
+        <div style="margin-top: 2px; color: var(--text-muted); font-size: 11px;">Folio: ${escapeHtml(it.raw_head_number || "-")}</div>
       </div>
 
       <div class="review-cell-narration">
@@ -670,8 +712,10 @@ function renderReviewItems() {
       <div class="review-cell-mapping">
         <div class="mapped-head-name">${escapeHtml(it.canonical_head_name) || '<span class="text-danger">UNRESOLVED</span>'}</div>
         ${it.canonical_subhead_name ? `<div class="mapped-subhead-name">Subhead: ${escapeHtml(it.canonical_subhead_name)}</div>` : ''}
-        <div class="mapped-meta">
-          <span class="badge badge-${it.mapping_status.toLowerCase()}">${it.mapping_status}</span>
+        ${missingSubhead ? `<div class="badge badge-danger text-xs mt-1">MANDATORY SUBHEAD MISSING</div>` : ''}
+        <div class="mapped-meta mt-1" style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+          <span class="badge badge-outline">M: ${it.mapping_status}</span>
+          ${renderHumanVerificationBadge(it.human_verification_status)}
           <span class="text-muted text-sm">${(it.confidence_score * 100).toFixed(0)}% conf</span>
           <span class="text-muted text-sm">(${escapeHtml(it.mapping_method)})</span>
         </div>
@@ -692,8 +736,21 @@ function renderReviewItems() {
       </div>
     `;
 
-    // Confirm
+    // Confirm with validation check
     card.querySelector(".btn-item-confirm").addEventListener("click", () => {
+      if (!it.date || !String(it.date).trim()) {
+        alert("Cannot confirm transaction: Date is missing. Click Edit to enter the date.");
+        return;
+      }
+      if (!it.canonical_head_id) {
+        alert("Cannot confirm transaction: Canonical accounting head is missing.");
+        return;
+      }
+      if (missingSubhead) {
+        const headObj = canonicalHeads.find(h => h.id === it.canonical_head_id);
+        alert(`Cannot confirm transaction: Head '${headObj ? headObj.name : it.canonical_head_name}' requires a mandatory subhead. Click Edit to select a subhead.`);
+        return;
+      }
       applyItemDecision(it.transaction_id, "CONFIRM");
     });
 
@@ -1263,9 +1320,31 @@ function renderPreflightSummary(summary) {
   const card = document.getElementById("preflightResultCard");
   card.style.display = "block";
 
+  const isBlocked = !summary.is_valid || (summary.status && (summary.status.startsWith("BLOCKED") || summary.status === "VALIDATION_FAILED"));
+
   const badge = document.getElementById("preflightStatusBadge");
-  badge.textContent = summary.status;
-  badge.className = `badge ${summary.is_valid ? "badge-verified" : "badge-unresolved"}`;
+  badge.textContent = summary.status || (summary.is_valid ? "READY_FOR_EXECUTION" : "BLOCKED");
+  badge.className = `badge ${summary.is_valid ? "badge-verified" : "badge-danger"}`;
+
+  const blockedBanner = document.getElementById("pfBlockedBanner");
+  if (blockedBanner) {
+    if (isBlocked) {
+      blockedBanner.style.display = "block";
+      const expBal = summary.expected_closing_balance != null ? summary.expected_closing_balance : 0;
+      const physBal = summary.physical_closing_balance != null ? summary.physical_closing_balance : expBal;
+      const variance = summary.closing_balance_variance != null ? Math.abs(summary.closing_balance_variance) : 0;
+
+      if (variance > 0) {
+        blockedBanner.innerHTML = `⛔ <strong>EXECUTION BLOCKED — Closing balance does not match the physical cashbook.</strong><br>Workbook: ₹${expBal.toLocaleString("en-IN", {minimumFractionDigits: 2})}. Physical: ₹${physBal.toLocaleString("en-IN", {minimumFractionDigits: 2})}. Difference: ₹${variance.toLocaleString("en-IN", {minimumFractionDigits: 2})}.<br><span style="font-size: 12px; font-weight: normal;">Church accounting rules strictly mandate zero variance before authorization.</span>`;
+      } else if (summary.blocked_reason) {
+        blockedBanner.innerHTML = `⛔ <strong>EXECUTION BLOCKED:</strong> ${escapeHtml(summary.blocked_reason)}`;
+      } else {
+        blockedBanner.innerHTML = `⛔ <strong>EXECUTION BLOCKED:</strong> Critical pre-flight validation gates failed. Inspect issues below.`;
+      }
+    } else {
+      blockedBanner.style.display = "none";
+    }
+  }
 
   document.getElementById("pfMonth").textContent = summary.month;
   document.getElementById("pfFileName").textContent = summary.file_name;
@@ -1279,25 +1358,90 @@ function renderPreflightSummary(summary) {
   const closeBal = summary.expected_closing_balance != null ? summary.expected_closing_balance : (openBal + summary.net_movement);
   document.getElementById("pfOpeningBal").textContent = `₹${openBal.toLocaleString("en-IN", {minimumFractionDigits: 2})}`;
   document.getElementById("pfClosingBal").textContent = `₹${closeBal.toLocaleString("en-IN", {minimumFractionDigits: 2})}`;
-  document.getElementById("pfCoverage").textContent = `${(summary.coverage_percent || 100).toFixed(1)}%`;
+  document.getElementById("pfCoverage").textContent = `${(summary.source_coverage_percent || summary.coverage_percent || 100).toFixed(1)}%`;
   
   const unmapped = summary.unmapped_heads_count || 0;
   const webMapElem = document.getElementById("pfWebMappings");
   webMapElem.textContent = (unmapped === 0) ? "COMPLETE (0 unmapped)" : `${unmapped} UNMAPPED`;
   webMapElem.className = (unmapped === 0) ? "text-success" : "text-danger";
 
+  // Render 7 Categorized Preflight Sections
+  const catSection = document.getElementById("pfCategoriesSection");
+  if (catSection && summary.categories) {
+    const catTitles = {
+      accounting_reconciliation: "1. Accounting Reconciliation",
+      transaction_completeness: "2. Transaction Completeness",
+      required_fields: "3. Required Fields & Integrity",
+      canonical_mapping: "4. Canonical Accounting Mapping",
+      website_mapping: "5. Website Form Mappings",
+      manifest_integrity: "6. Manifest Packaging Readiness",
+      artifact_integrity: "7. Artifact & Cryptographic Integrity"
+    };
+
+    let catHtml = `<h4 style="margin-bottom: 12px; color: #334155;">Pre-Flight Integrity Gates (7 Categories)</h4><div class="pf-categories-grid">`;
+    for (const [key, catObj] of Object.entries(summary.categories)) {
+      const isPass = catObj.status === "PASS";
+      const badgeCls = isPass ? "badge-verified" : "badge-danger";
+      const cardCls = isPass ? "status-pass" : "status-blocked";
+      const title = catTitles[key] || key;
+
+      catHtml += `
+        <div class="pf-cat-card ${cardCls}">
+          <div class="pf-cat-header">
+            <span class="pf-cat-title">${escapeHtml(title)}</span>
+            <span class="badge ${badgeCls}">${escapeHtml(catObj.status)}</span>
+          </div>
+          <div class="pf-cat-body">
+      `;
+
+      if (key === "accounting_reconciliation" && catObj.details) {
+        const d = catObj.details;
+        catHtml += `<div>Opening: ₹${(d.opening_balance||0).toLocaleString("en-IN", {minimumFractionDigits: 2})} | Receipts: ₹${(d.total_receipts||0).toLocaleString("en-IN", {minimumFractionDigits: 2})} | Payments: ₹${(d.total_payments||0).toLocaleString("en-IN", {minimumFractionDigits: 2})}</div>`;
+        catHtml += `<div>Computed Closing: ₹${(d.computed_closing_balance||0).toLocaleString("en-IN", {minimumFractionDigits: 2})} | Physical: ₹${(d.physical_closing_balance||0).toLocaleString("en-IN", {minimumFractionDigits: 2})}</div>`;
+        catHtml += `<div style="font-weight: 600; color: ${d.is_exact_match ? '#10b981' : '#ef4444'};">Variance: ₹${Math.abs(d.closing_balance_variance||0).toLocaleString("en-IN", {minimumFractionDigits: 2})} (${d.is_exact_match ? 'Exact ₹0.00 Match' : 'Discrepancy'})</div>`;
+      } else if (key === "transaction_completeness" && catObj.details) {
+        const d = catObj.details;
+        catHtml += `<div>Total Transactions: ${d.total_count} (Receipts: ${d.receipts_count}, Payments: ${d.payments_count})</div>`;
+      }
+
+      if (catObj.issues && catObj.issues.length > 0) {
+        catHtml += `
+          <div class="pf-cat-issues">
+            <strong>${catObj.issue_count} Blocking Issue(s):</strong>
+            <ul>
+              ${catObj.issues.map(iss => `<li>${escapeHtml(iss)}</li>`).join("")}
+            </ul>
+          </div>
+        `;
+      } else {
+        catHtml += `<div class="text-success text-sm mt-1">✓ All checks passed without errors.</div>`;
+      }
+
+      catHtml += `</div></div>`;
+    }
+    catHtml += `</div>`;
+    catSection.innerHTML = catHtml;
+  }
+
   const errSection = document.getElementById("pfErrorsSection");
   const errList = document.getElementById("pfErrorsList");
   const successSection = document.getElementById("pfSuccessSection");
+  const btnAuth = document.getElementById("btnAuthorizeBatch");
 
   if (!summary.is_valid && summary.errors && summary.errors.length > 0) {
     errSection.style.display = "block";
     successSection.style.display = "none";
     document.getElementById("pfErrorCount").textContent = summary.errors.length;
     errList.innerHTML = summary.errors.map(e => `<li>[Sheet: ${e.sheet}, Row ${e.row_number}] ${e.column}: ${escapeHtml(e.error_message)}</li>`).join("");
+    if (btnAuth) btnAuth.disabled = true;
+  } else if (!summary.is_valid) {
+    errSection.style.display = "none";
+    successSection.style.display = "none";
+    if (btnAuth) btnAuth.disabled = true;
   } else {
     errSection.style.display = "none";
     successSection.style.display = "block";
+    if (btnAuth) btnAuth.disabled = false;
   }
 }
 
@@ -1307,6 +1451,10 @@ function setupExecutionControls() {
     btnAuth.addEventListener("click", async () => {
       if (!lastPreflightSummary || !lastPreflightSummary.file_hash_sha256) {
         alert("No verified approved workbook snapshot available to authorize.");
+        return;
+      }
+      if (!lastPreflightSummary.is_valid || (lastPreflightSummary.status && (lastPreflightSummary.status.startsWith("BLOCKED") || lastPreflightSummary.status === "VALIDATION_FAILED"))) {
+        alert("EXECUTION BLOCKED: Batch cannot be authorized while accounting validation gates or balance reconciliation are failing.");
         return;
       }
       const openBal = lastPreflightSummary.opening_balance != null ? lastPreflightSummary.opening_balance : 18506.60;
@@ -1400,6 +1548,50 @@ function setupExecutionControls() {
       }
     });
   }
+}
+
+function setupMayResetControls() {
+  const handler = async () => {
+    if (currentMonth !== "2026-05") {
+      alert("Safe reset is strictly restricted to May 2026 (2026-05).");
+      return;
+    }
+    const confirmed = confirm(
+      "CONFIRM SAFE RESET OF MAY 2026 REVIEW DATA:\n\n" +
+      "1. Active review state, drafts, manifests, approved snapshots, and journals will be safely archived to a timestamped folder with an auditable SHA-256 manifest.\n" +
+      "2. Original cashbook photographs in data/monthly/2026-05/ are preserved intact.\n" +
+      "3. All stale approval and pre-flight authorizations will be cleared.\n" +
+      "4. The system will reset to a clean state ready for fresh processing.\n\n" +
+      "Do you want to proceed with the reset?"
+    );
+    if (!confirmed) return;
+
+    try {
+      const res = await fetch(`/api/month/2026-05/reset`, { method: "POST" });
+      if (!res.ok) {
+        const err = await res.json();
+        alert("Reset failed: " + (err.detail || JSON.stringify(err)));
+        return;
+      }
+      const data = await res.json();
+      alert(`May 2026 successfully reset!\n\nArchived ${data.archived_file_count} files into:\n${data.archive_directory}`);
+      // Invalidate current preflight card if displayed
+      const card = document.getElementById("preflightResultCard");
+      if (card) card.style.display = "none";
+      lastPreflightSummary = null;
+      // Switch to upload tab and reload month data
+      switchTab("upload");
+      await loadCurrentMonthData();
+    } catch (e) {
+      alert("Error resetting May 2026: " + e.message);
+    }
+  };
+
+  const btnReview = document.getElementById("btnResetMayReview");
+  if (btnReview) btnReview.addEventListener("click", handler);
+
+  const btnProc = document.getElementById("btnResetMayFromProcessing");
+  if (btnProc) btnProc.addEventListener("click", handler);
 }
 
 async function startBatchExecution(arm = false) {
