@@ -10,7 +10,7 @@ import os
 import shutil
 import tempfile
 import time
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Mapping, Optional, Tuple
 
@@ -218,7 +218,10 @@ class ManifestBuilder:
             total_amount += amt
 
             v_num = str(v_val or "").strip()
-            date_str = str(date_val or "").strip()
+            if isinstance(date_val, (datetime, date)):
+                date_str = date_val.strftime("%Y-%m-%d")
+            else:
+                date_str = str(date_val or "").strip()
             subhead_str = str(sub_val or "").strip() if sub_val else None
             narration_str = str(narr_val or "").strip()
 

@@ -471,11 +471,11 @@ class ProcessingPipeline:
 
             draft_excel_path = month_output_dir / f"{month}_draft_review.xlsx"
             try:
-                self.manual_review_exporter.export(processed_rows, draft_excel_path)
+                self.manual_review_exporter.export_review_workbook(processed_rows, draft_excel_path)
             except PermissionError:
                 ts = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
                 draft_excel_path = month_output_dir / f"{month}_draft_review_{ts}.xlsx"
-                self.manual_review_exporter.export(processed_rows, draft_excel_path)
+                self.manual_review_exporter.export_review_workbook(processed_rows, draft_excel_path)
 
             self._update_stage(
                 job_id, "draft_workbook_generation", StageStatus.COMPLETE,

@@ -4,6 +4,7 @@ import hashlib
 import json
 import re
 import shutil
+from datetime import date, datetime
 from decimal import Decimal
 from enum import Enum
 from pathlib import Path
@@ -420,7 +421,10 @@ class ApprovedWorkbookValidator:
                 errors.append(ValidationError(sheet=sheet_name, row_number=r_idx, column="Date", error_message=err_msg))
                 cat_issues["required_fields"].append(err_msg)
             else:
-                date_str = str(date_val).strip()
+                if isinstance(date_val, (datetime, date)):
+                    date_str = date_val.strftime("%Y-%m-%d")
+                else:
+                    date_str = str(date_val).strip()
                 # Check valid format
                 if not (re.match(r"^\d{4}-\d{2}-\d{2}$", date_str) or re.match(r"^\d{1,2}[\.\/\-]\d{1,2}([\.\/\-]\d{2,4})?$", date_str)):
                     err_msg = f"{sheet_name} row {r_idx}: Invalid date format '{date_str}'. Expected YYYY-MM-DD."

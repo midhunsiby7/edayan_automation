@@ -307,13 +307,20 @@ def run_dry_run(
     for sheet_name, direction in SHEETS.items():
         sheet = workbook[sheet_name]
         headers = [_text(cell.value) for cell in sheet[1]]
-        if headers != list(REQUIRED_COLUMNS):
-            raise ValueError(f"{sheet_name} columns do not match {list(REQUIRED_COLUMNS)}")
+        col_map = {}
+        for col_name in REQUIRED_COLUMNS:
+            if col_name in headers:
+                col_map[col_name] = headers.index(col_name)
+            elif col_name == "Receipt Number" and "Voucher Number" in headers:
+                col_map["Receipt Number"] = headers.index("Voucher Number")
+            else:
+                raise ValueError(f"{sheet_name} columns do not match {list(REQUIRED_COLUMNS)}")
         for row_number, values in enumerate(sheet.iter_rows(min_row=2, values_only=True), start=2):
             if not any(_text(value) for value in values):
                 continue
+            row_dict = {col: values[idx] for col, idx in col_map.items()}
             entries.append(_validate_row(
-                direction, row_number, dict(zip(REQUIRED_COLUMNS, values)),
+                direction, row_number, row_dict,
                 master, crosswalk, website_options, observed_subheads,
             ))
 

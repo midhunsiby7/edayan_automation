@@ -826,11 +826,11 @@ def refresh_draft_workbook(month: str = Form(...)):
 
     draft_path = DATA_DIR / "output" / month / f"{month}_draft_review.xlsx"
     try:
-        manual_exporter.export(processed_rows, draft_path)
+        manual_exporter.export_review_workbook(processed_rows, draft_path)
     except PermissionError:
         ts = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
         draft_path = DATA_DIR / "output" / month / f"{month}_draft_review_{ts}.xlsx"
-        manual_exporter.export(processed_rows, draft_path)
+        manual_exporter.export_review_workbook(processed_rows, draft_path)
 
     return {
         "message": f"Successfully generated draft review workbook for {month}",
@@ -856,6 +856,18 @@ def download_draft_workbook(month: str):
         filename=draft_path.name,
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     )
+
+
+@app.get("/api/export/raw")
+def download_raw_workbook(month: str):
+    """Download the generated review Excel workbook (alias for /api/export/draft)."""
+    return download_draft_workbook(month=month)
+
+
+@app.post("/api/export/raw")
+def refresh_raw_workbook(month: str = Form(...)):
+    """Refresh the review Excel workbook (alias for /api/export/draft)."""
+    return refresh_draft_workbook(month=month)
 
 
 @app.post("/api/upload-approved")
